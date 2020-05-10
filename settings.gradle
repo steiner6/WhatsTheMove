@@ -1,0 +1,2 @@
+rootProject.name='WhatsTheMove'
+include ':app'
