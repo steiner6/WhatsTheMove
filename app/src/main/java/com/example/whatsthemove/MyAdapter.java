@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,8 +32,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder (ViewHolder holder, int position) {
-        String name = barNames.get(position);
-        holder.myTextView.setText(name);
+        holder.myImageView.setImageResource(barPics.get(position));
+        holder.myTextView.setText(barNames.get(position));
     }
 
     @Override
@@ -42,10 +43,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView myTextView;
+        ImageView myImageView;
 
         ViewHolder(View itemView) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.row);
+            myImageView = itemView.findViewById(R.id.barID);
             itemView.setOnClickListener(this);
         }
 

@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 
@@ -44,16 +45,16 @@ public class FilterActivity extends AppCompatActivity implements MyAdapter.ItemC
     public void addToArrays() {
 
         barNames.add("Chasers Bar & Grille");
-        //barPics.add(R.drawable.chasers);
+        barPics.add(R.drawable.chasers);
 
         barNames.add("The Double U");
-        //barPics.add(R.drawable.doubleu);
+        barPics.add(R.drawable.doubleu);
 
         barNames.add("The Kollege Klub");
-        //barPics.add(R.drawable.kklub);
+        barPics.add(R.drawable.kklub);
 
         barNames.add("Mondays");
-        //barPics.add(R.drawable.mondays);
+        barPics.add(R.drawable.mondays);
     }
 
 }
