@@ -9,14 +9,16 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.List;
+
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-    private String[] barNames;
-    private Integer[] barPics;
+    private List<String> barNames;
+    private List<Integer> barPics;
     private LayoutInflater mInflater;
     private AdapterView.OnItemClickListener mClickListener;
 
     //Constructor
-    public MyAdapter(Context context, String[] bn, Integer[] bp) {
+    public MyAdapter(Context context, List<String> bn, List<Integer> bp) {
         this.mInflater = LayoutInflater.from(context);
         this.barNames = bn;
         this.barPics = bp;
@@ -29,13 +31,13 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder (ViewHolder holder, int position) {
-        String name = barNames[position];
+        String name = barNames.get(position);
         holder.myTextView.setText(name);
     }
 
     @Override
     public int getItemCount() {
-        return barNames.length;
+        return barNames.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

@@ -8,13 +8,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FilterActivity extends AppCompatActivity implements MyAdapter.ItemClickListener {
 
     private RecyclerView recyclerView;
     private MyAdapter mAdapter;
 
-    private String[] barNames = new String[4];
-    private Integer[] barPics = new Integer[4];
+    private List<String> barNames = new ArrayList<>();
+    private List<Integer> barPics = new ArrayList<>();
 
 
     @Override
@@ -25,7 +28,6 @@ public class FilterActivity extends AppCompatActivity implements MyAdapter.ItemC
         recyclerView = findViewById(R.id.filterRecycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new MyAdapter(this, barNames, barPics);
-
         recyclerView.setAdapter(mAdapter);
     }
 
@@ -41,17 +43,17 @@ public class FilterActivity extends AppCompatActivity implements MyAdapter.ItemC
 
     public void addToArrays() {
 
-        barNames[0] = "Chasers Bar & Grille";
-        barPics[0] = R.drawable.chasers;
+        barNames.add("Chasers Bar & Grille");
+        //barPics.add(R.drawable.chasers);
 
-        barNames[1] = "The Double U";
-        barPics[1] = R.drawable.doubleu;
+        barNames.add("The Double U");
+        //barPics.add(R.drawable.doubleu);
 
-        barNames[2] = "The Kollege Klub";
-        barPics[2] = R.drawable.kklub;
+        barNames.add("The Kollege Klub");
+        //barPics.add(R.drawable.kklub);
 
-        barNames[3] = "Mondays";
-        barPics[3] = R.drawable.mondays;
+        barNames.add("Mondays");
+        //barPics.add(R.drawable.mondays);
     }
 
 }
