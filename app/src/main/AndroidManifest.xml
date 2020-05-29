@@ -19,6 +19,7 @@
         <activity android:name=".FilterActivity">
 
         </activity>
+
     </application>
 
 </manifest>

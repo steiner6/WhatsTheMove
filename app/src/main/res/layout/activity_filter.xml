@@ -21,6 +21,7 @@
         app:layout_constraintBottom_toTopOf="@+id/selectBars"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@drawable/ic_arrow_back_black_24dp"
         tools:ignore="VectorDrawableCompat" />
 
@@ -45,7 +46,6 @@
         android:layout_width="wrap_content"
         android:layout_height="31dp"
         android:layout_above="@+id/filterRecycleView"
-        android:layout_marginBottom="24dp"
         android:text="Select your favorite bars"
         app:layout_constraintBottom_toTopOf="@+id/filterRecycleView"
         app:layout_constraintEnd_toEndOf="parent"
@@ -55,14 +55,13 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecycleView"
         android:layout_width="match_parent"
-        android:layout_height="472dp"
+        android:layout_height="455dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginTop="112dp"
+        android:layout_marginTop="56dp"
         android:background="@color/background"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
