@@ -5,26 +5,22 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.CheckBox;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class FilterActivity extends AppCompatActivity {
 
-    private RecyclerView recyclerView;
-    private MyAdapter mAdapter;
-    private LinearLayoutManager mllManager;
+    private RecyclerView filterRecyclerView;
+    private MyAdapter myAdapter;
+    private LinearLayoutManager filterManager;
 
-    private List<String> barNames = new ArrayList<>();
-    private List<Integer> barPics = new ArrayList<>();
+    private List<String> filterBarNames = new ArrayList<>();
+    private List<Integer> filterBarPics = new ArrayList<>();
     private List<String> selectedBarNames = new ArrayList<>();
     private List<Integer> selectedBarPics = new ArrayList<>();
 
@@ -37,42 +33,44 @@ public class FilterActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_filter);
         addToArrays();
-        mllManager = new LinearLayoutManager(this);
-        recyclerView = findViewById(R.id.filterRecycleView);
-        recyclerView.setLayoutManager(mllManager);
-        mAdapter = new MyAdapter(this, barNames, barPics, selectedBarNames, selectedBarPics);
-        recyclerView.setAdapter(mAdapter);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                mllManager.VERTICAL);
+        filterManager = new LinearLayoutManager(this);
+        filterRecyclerView = findViewById(R.id.filterRecycleView);
+        filterRecyclerView.setLayoutManager(filterManager);
+        myAdapter = new MyAdapter(this, filterBarNames, filterBarPics, selectedBarNames, selectedBarPics);
+        filterRecyclerView.setAdapter(myAdapter);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(filterRecyclerView.getContext(),
+                filterManager.VERTICAL);
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(FilterActivity.this, R.drawable.divider));
-        recyclerView.addItemDecoration(dividerItemDecoration);
+        filterRecyclerView.addItemDecoration(dividerItemDecoration);
     }
 
 
     public void gotoMain(View view) {
         Intent intent = new Intent(this, MainActivity.class);
+        intent.putStringArrayListExtra("barNames", (ArrayList<String>) selectedBarNames);
+        intent.putIntegerArrayListExtra("barPics", (ArrayList<Integer>) selectedBarPics);
         startActivity(intent);
     }
 
     public void addToArrays() {
 
-        barNames.add("Chasers Bar & Grille");
-        barPics.add(R.drawable.chasers);
+        filterBarNames.add("Chasers Bar & Grille");
+        filterBarPics.add(R.drawable.chasers);
 
-        barNames.add("The Double U");
-        barPics.add(R.drawable.doubleu);
+        filterBarNames.add("The Double U");
+        filterBarPics.add(R.drawable.doubleu);
 
-        barNames.add("The Kollege Klub");
-        barPics.add(R.drawable.kklub);
+        filterBarNames.add("The Kollege Klub");
+        filterBarPics.add(R.drawable.kklub);
 
-        barNames.add("Mondays");
-        barPics.add(R.drawable.mondays);
+        filterBarNames.add("Mondays");
+        filterBarPics.add(R.drawable.mondays);
 
-        barNames.add("Whisky Jacks Saloon");
-        barPics.add(R.drawable.whiskyjacks);
+        filterBarNames.add("Whisky Jacks Saloon");
+        filterBarPics.add(R.drawable.whiskyjacks);
 
-        barNames.add("The Karaoke Kid");
-        barPics.add(R.drawable.kkid);
+        filterBarNames.add("The Karaoke Kid");
+        filterBarPics.add(R.drawable.kkid);
     }
 
 }
