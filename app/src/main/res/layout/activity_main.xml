@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,14 +16,13 @@
         android:textColor="@color/gray"
         android:textSize="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.13" />
+        app:layout_constraintVertical_bias="0.167" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/filterButton"
         android:layout_width="69dp"
         android:layout_height="66dp"
         android:background="@color/background"
@@ -39,26 +39,39 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/mainRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="345dp"
-        android:layout_marginBottom="4dp"
+        android:layout_height="420dp"
+        android:layout_marginTop="25dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.454"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/whatsthemove"
-        app:layout_constraintVertical_bias="0.801" />
+        app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
+    <Button
+        android:id="@+id/bouncerbutton"
+        android:layout_width="70dp"
+        android:layout_height="65dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:background="@color/background"
+        android:onClick="gotoBouncer"
+        android:text="I'm a Bouncer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- <TextView
         android:id="@+id/sortBy"
         android:layout_width="49dp"
         android:layout_height="25dp"
         android:text="Sort by:"
         app:layout_constraintBottom_toTopOf="@+id/mainRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton"
-        app:layout_constraintVertical_bias="0.654" />
+        app:layout_constraintTop_toBottomOf="@+id/filterButton"
+        app:layout_constraintVertical_bias="0.654" /> -->
 
-    <Spinner
+    <!-- <Spinner
         android:id="@+id/spinner"
         android:layout_width="290dp"
         android:layout_height="27dp"
@@ -71,6 +84,6 @@
         app:layout_constraintHorizontal_bias="0.916"
         app:layout_constraintStart_toEndOf="@+id/sortBy"
         app:layout_constraintTop_toBottomOf="@+id/whatsthemove"
-        app:layout_constraintVertical_bias="0.554" />
+        app:layout_constraintVertical_bias="0.554" /> -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

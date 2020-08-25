@@ -29,10 +29,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
-        barNames.add("KK");
-        barPics.add(R.drawable.kklub);
-        barNames.add("UU");
-        barPics.add(R.drawable.doubleu);
+        addToArrays();
 
         setContentView(R.layout.activity_main);
 
@@ -51,5 +48,31 @@ public class MainActivity extends AppCompatActivity {
     public void gotoFilter(View view) {
         Intent intent = new Intent(this, FilterActivity.class);
         startActivity(intent);
+    }
+
+    public void gotoBouncer(View view) {
+        Intent intent = new Intent(this, BouncerActivity.class);
+        startActivity(intent);
+    }
+
+    public void addToArrays() {
+
+        barNames.add("Chasers Bar & Grille");
+        barPics.add(R.drawable.chasers);
+
+        barNames.add("The Double U");
+        barPics.add(R.drawable.doubleu);
+
+        barNames.add("The Kollege Klub");
+        barPics.add(R.drawable.kklub);
+
+        barNames.add("Mondays");
+        barPics.add(R.drawable.mondays);
+
+        barNames.add("Whisky Jacks Saloon");
+        barPics.add(R.drawable.whiskyjacks);
+
+        barNames.add("The Karaoke Kid");
+        barPics.add(R.drawable.kkid);
     }
 }
