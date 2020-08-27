@@ -3,13 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="115dp"
     android:orientation="horizontal">
 
 
     <TextView
         android:id="@+id/barname"
-        android:layout_width="251dp"
+        android:layout_width="192dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
@@ -17,10 +17,8 @@
         android:layout_marginStart="17dp"
         android:layout_marginLeft="17dp"
         android:layout_marginTop="3dp"
-        android:layout_marginEnd="13dp"
-        android:layout_marginRight="13dp"
-        android:layout_toEndOf="@+id/barID"
-        android:layout_toRightOf="@+id/barID"
+        android:layout_marginEnd="44dp"
+        android:layout_marginRight="44dp"
         android:text="TextView" />
 
     <ImageView
@@ -34,16 +32,17 @@
         android:layout_marginLeft="8dp"
         android:layout_marginTop="6dp"
         android:layout_weight="1"
-        app:srcCompat="@drawable/kklub" />
+        android:tag="chasers"
+        app:srcCompat="@drawable/chasers" />
 
     <TextView
         android:id="@+id/pplinlinelabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/barname"
-        android:layout_marginStart="13dp"
-        android:layout_marginLeft="13dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="20dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:text="People in line:" />
@@ -54,10 +53,10 @@
         android:layout_height="23dp"
         android:layout_below="@+id/pplinlinelabel"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="12dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="17dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:text="Estimated wait time:" />
@@ -65,15 +64,15 @@
     <TextView
         android:id="@+id/estwaittime"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="18dp"
         android:layout_below="@+id/pplinline"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="37dp"
-        android:layout_marginRight="37dp"
-        android:layout_marginBottom="17dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="68dp"
+        android:layout_marginRight="68dp"
+        android:layout_marginBottom="20dp"
         android:text="a time" />
 
     <TextView
@@ -83,9 +82,22 @@
         android:layout_below="@+id/barname"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="1dp"
-        android:layout_marginEnd="14dp"
-        android:layout_marginRight="14dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="47dp"
+        android:layout_marginRight="47dp"
         android:text="a number" />
+
+    <ImageButton
+        android:id="@+id/updateButton"
+        android:layout_width="35dp"
+        android:layout_height="33dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginRight="0dp"
+        android:background="@color/background"
+        app:srcCompat="@android:drawable/stat_notify_sync" />
 
 </RelativeLayout>

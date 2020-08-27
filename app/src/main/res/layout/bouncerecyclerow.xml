@@ -8,18 +8,18 @@
 
     <TextView
         android:id="@+id/barn"
-        android:layout_width="273dp"
-        android:layout_height="wrap_content"
+        android:layout_width="240dp"
+        android:layout_height="25dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginStart="17dp"
-        android:layout_marginLeft="17dp"
+        android:layout_marginStart="46dp"
+        android:layout_marginLeft="46dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginRight="5dp"
-        android:layout_toEndOf="@+id/barID"
-        android:layout_toRightOf="@+id/barID"
+        android:layout_marginEnd="17dp"
+        android:layout_marginRight="17dp"
+        android:layout_toEndOf="@+id/barp"
+        android:layout_toRightOf="@+id/barp"
         android:text="TextView" />
 
     <ImageView
@@ -42,9 +42,10 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="109dp"
-        android:layout_marginRight="109dp"
-        android:layout_marginBottom="17dp"
+        android:layout_marginEnd="110dp"
+        android:layout_marginRight="110dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/blue"
         android:text="Update" />
 
 </RelativeLayout>

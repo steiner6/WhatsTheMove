@@ -47,8 +47,6 @@ public class FilterActivity extends AppCompatActivity {
 
     public void gotoMain(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putStringArrayListExtra("barNames", (ArrayList<String>) selectedBarNames);
-        intent.putIntegerArrayListExtra("barPics", (ArrayList<Integer>) selectedBarPics);
         startActivity(intent);
     }
 
