@@ -73,11 +73,11 @@
 
     <!-- <Spinner
         android:id="@+id/spinner"
-        android:layout_width="290dp"
-        android:layout_height="27dp"
+        android:layout_width="222dp"
+        android:layout_height="24dp"
         android:layout_marginEnd="60dp"
         android:layout_marginRight="60dp"
-        android:background="@color/background"
+        android:background="@android:drawable/spinner_dropdown_background"
         android:spinnerMode="dropdown"
         app:layout_constraintBottom_toTopOf="@+id/mainRecyclerView"
         app:layout_constraintEnd_toEndOf="parent"

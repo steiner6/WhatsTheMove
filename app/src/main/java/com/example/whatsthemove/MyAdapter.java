@@ -54,6 +54,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                     checkedBarNames.add(name);
                     checkedBarPics.add(pic);
                     editor.putBoolean(name, true).apply();
+                } else {
+                    String name = myAdaptBarNames.get(position);
+                    Integer pic = myAdaptBarPics.get(position);
+                    checkedBarNames.remove(name);
+                    checkedBarNames.remove(pic);
+                    editor.remove(name).apply();
                 }
             }
         });

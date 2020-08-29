@@ -49,14 +49,12 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView myTextView;
         ImageView myImageView;
-        ImageButton myButton;
 
         ViewHolder(View itemView) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.barname);
             myImageView = itemView.findViewById(R.id.barpic);
-            myButton = itemView.findViewById(R.id.updateButton);
-            myButton.setOnClickListener(this);
+            itemView.setOnClickListener(this);
         }
 
         @Override

@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private RecyclerView mainRecyclerView;
     private MainAdapter mainAdapter;
     private LinearLayoutManager mainManager;
-    public Context context = MainActivity.this;
+    private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
 
     private List<String> barNames = new ArrayList<>();
@@ -34,12 +34,12 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
         addToArrays();
-
-        setContentView(R.layout.activity_main);
 
         mainManager = new LinearLayoutManager(this);
         mainRecyclerView = findViewById(R.id.mainRecyclerView);
@@ -56,12 +56,10 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     public void gotoUpdate(TextView myTextView, ImageView myImageView) {
         Intent intent = new Intent(this, UpdateBarActivity.class);
 
+        //Get bar name
         String a = myTextView.getText().toString();
 
-        //TextView name = findViewById(R.id.barname);
-        //String a = name.getText().toString();
-
-
+        //Get bar pic
         String tag = (String) myImageView.getTag();
         Resources resource = context.getResources();
         int resourceID = resource.getIdentifier(tag, "drawable", context.getPackageName());
@@ -70,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] b = baos.toByteArray();
 
+        //Add name and pic to intent
         intent.putExtra("name", a);
         intent.putExtra("picture", b);
 
@@ -106,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
         barNames.add("Whisky Jacks Saloon");
         barPics.add(R.drawable.whiskyjacks);
-        tags.add("whiskeyjacks");
+        tags.add("whiskyjacks");
 
         barNames.add("The Karaoke Kid");
         barPics.add(R.drawable.kkid);
