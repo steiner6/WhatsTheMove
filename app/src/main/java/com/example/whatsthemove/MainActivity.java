@@ -80,11 +80,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         startActivity(intent);
     }
 
-    public void gotoBouncer(View view) {
-        Intent intent = new Intent(this, BouncerActivity.class);
-        startActivity(intent);
-    }
-
     public void addToArrays() {
 
         barNames.add("Chasers Bar & Grille");
@@ -103,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         barPics.add(R.drawable.mondays);
         tags.add("mondays");
 
-        barNames.add("Whisky Jacks Saloon");
+        barNames.add("Whiskey Jacks Saloon");
         barPics.add(R.drawable.whiskyjacks);
         tags.add("whiskyjacks");
 

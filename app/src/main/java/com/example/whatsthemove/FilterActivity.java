@@ -27,11 +27,11 @@ public class FilterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_filter);
 
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
-        setContentView(R.layout.activity_filter);
         addToArrays();
         filterManager = new LinearLayoutManager(this);
         filterRecyclerView = findViewById(R.id.filterRecycleView);
@@ -43,7 +43,6 @@ public class FilterActivity extends AppCompatActivity {
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(FilterActivity.this, R.drawable.divider));
         filterRecyclerView.addItemDecoration(dividerItemDecoration);
     }
-
 
     public void gotoMain(View view) {
         Intent intent = new Intent(this, MainActivity.class);

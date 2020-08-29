@@ -38,7 +38,7 @@ public class UpdateBarActivity extends AppCompatActivity {
     }
 
     public void AttentionDialog(View view) {
-        AlertDialog alert = new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
                 .setTitle("Attention!")
                 .setMessage("This app works best with accurate data. Please input accurate numbers to continue making this app great!")
                 .setPositiveButton("Ok!", new DialogInterface.OnClickListener() {
@@ -54,7 +54,7 @@ public class UpdateBarActivity extends AppCompatActivity {
 
         final EditText input = new EditText(this);
 
-        AlertDialog builder = new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
                 .setTitle("Update the Line")
                 .setMessage("Enter the number of people currently in line at " + name)
                 .setView(input)
@@ -62,15 +62,52 @@ public class UpdateBarActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Editable usrinput = input.getText();
+                        validUsrInput(usrinput);
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        dialog.cancel();
                     }
                 })
                 .show();
+    }
+
+    public void validUsrInput(Editable usrinput) {
+        String usr = usrinput.toString();
+
+        try {
+            int num = Integer.parseInt(usr);
+            if (num < 0 || num > 500) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Error!")
+                        .setMessage("Please input a numeric value between 0 and 500")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.cancel();
+                                BuildDialog();
+                            }
+                        })
+                        .show();
+            } else {
+
+            }
+        } catch (NumberFormatException e) {
+            new AlertDialog.Builder(this)
+                .setTitle("Error!")
+                .setMessage("Please input a numeric value between 0 and 500")
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                        BuildDialog();
+                    }
+                })
+                .show();
+        }
+
     }
 
     public void gotoMain(View view) {
