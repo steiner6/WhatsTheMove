@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "36141292128",
+    "firebase_url": "https://what-s-the-move-11e3c.firebaseio.com",
+    "project_id": "what-s-the-move-11e3c",
+    "storage_bucket": "what-s-the-move-11e3c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36141292128:android:b1bc2ce3057117a7318105",
+        "android_client_info": {
+          "package_name": "com.example.whatsthemove"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "36141292128-uq5q31t3iqvcpkfl0s03vdc8qi2n7u8p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZxv4AvYLUkNmsEIWt7uRQXIIMoNBbwuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "36141292128-uq5q31t3iqvcpkfl0s03vdc8qi2n7u8p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

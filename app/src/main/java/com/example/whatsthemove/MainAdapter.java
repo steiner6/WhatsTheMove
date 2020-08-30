@@ -6,7 +6,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
@@ -16,14 +23,16 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     private List<String> mainAdaptTags;
     private LayoutInflater mainInflater;
     private AdapterInterface listener;
+    private List<Integer> barStatus;
 
-    public MainAdapter(Context context, List<String> bn, List<Integer> bp, List<String> tg, AdapterInterface listener) {
+    public MainAdapter(Context context, List<String> bn, List<Integer> bp, List<String> tg, AdapterInterface listener, List<Integer> stat) {
         this.context = context;
         this.mainInflater = LayoutInflater.from(context);
         this.mainAdaptBarNames = bn;
         this.mainAdaptBarPics = bp;
         this.mainAdaptTags = tg;
         this.listener = listener;
+        this.barStatus = stat;
     }
 
     public MainAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -36,6 +45,24 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         holder.myImageView.setImageResource(mainAdaptBarPics.get(position));
         holder.myImageView.setTag(mainAdaptTags.get(position));
         holder.myTextView.setText(mainAdaptBarNames.get(position));
+        holder.myTextView.setTag(barStatus.get(position));
+
+        String tag = (String) holder.myImageView.getTag();
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference(tag);
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String value = snapshot.getValue(String.class);
+                holder.ppl.setText(value);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                error.toException();
+            }
+        });
     }
 
     @Override
@@ -45,12 +72,14 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView myTextView;
+        TextView ppl;
         ImageView myImageView;
 
         ViewHolder(View itemView) {
             super(itemView);
             myTextView = itemView.findViewById(R.id.barname);
             myImageView = itemView.findViewById(R.id.barpic);
+            ppl = itemView.findViewById(R.id.pplinline);
             itemView.setOnClickListener(this);
         }
 

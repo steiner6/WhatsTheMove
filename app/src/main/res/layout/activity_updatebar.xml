@@ -126,7 +126,6 @@
         android:layout_height="43dp"
         android:layout_marginTop="24dp"
         android:text="Update number of People in line"
-        android:onClick="AttentionDialog"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/estwaittimelabel" />
