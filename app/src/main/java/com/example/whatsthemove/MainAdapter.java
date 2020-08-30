@@ -48,21 +48,45 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         holder.myTextView.setTag(barStatus.get(position));
 
         String tag = (String) holder.myImageView.getTag();
+        int status = Integer.parseInt(holder.myTextView.getTag().toString());
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference(tag);
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String value = snapshot.getValue(String.class);
-                holder.ppl.setText(value);
-            }
+        final DatabaseReference myRef = database.getReference(tag);
+        if (status == 1) {
+            myRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.getValue(String.class);
+                    if (value == "Closed") {
+                        myRef.setValue(0);
+                        holder.ppl.setText("0");
+                    } else {
+                        holder.ppl.setText(value);
+                    }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                error.toException();
-            }
-        });
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+        } else {
+            myRef.setValue("Closed");
+            myRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.getValue(String.class);
+                    holder.ppl.setText(value);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+
+        }
     }
 
     @Override

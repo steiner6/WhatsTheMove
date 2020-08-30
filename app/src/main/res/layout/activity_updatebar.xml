@@ -73,7 +73,7 @@
         app:layout_constraintTop_toBottomOf="@+id/bitimage" />
 
     <TextView
-        android:id="@+id/estwaittimelabel"
+        android:id="@+id/pplinbarlabel"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
         android:layout_below="@+id/pplinlinelabel"
@@ -83,12 +83,12 @@
         android:layout_marginTop="40dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
-        android:text="Estimated wait time:"
+        android:text="People in the bar:"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pplinlinelabel" />
 
     <TextView
-        android:id="@+id/estwaittime"
+        android:id="@+id/pplinbar"
         android:layout_width="wrap_content"
         android:layout_height="18dp"
         android:layout_below="@+id/pplinline"
@@ -98,10 +98,12 @@
         android:layout_marginStart="76dp"
         android:layout_marginLeft="76dp"
         android:layout_marginTop="40dp"
-        android:text="a time"
+        android:layout_marginEnd="112dp"
+        android:layout_marginRight="112dp"
+        android:text="Unknown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.058"
-        app:layout_constraintStart_toEndOf="@+id/estwaittimelabel"
+        app:layout_constraintStart_toEndOf="@+id/pplinbarlabel"
         app:layout_constraintTop_toBottomOf="@+id/pplinline" />
 
     <TextView
@@ -114,9 +116,9 @@
         android:layout_marginStart="88dp"
         android:layout_marginLeft="88dp"
         android:layout_marginTop="52dp"
-        android:text="a number"
+        android:text="Unknown"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.279"
+        app:layout_constraintHorizontal_bias="0.076"
         app:layout_constraintStart_toEndOf="@+id/pplinlinelabel"
         app:layout_constraintTop_toBottomOf="@+id/bitimage" />
 
@@ -127,8 +129,9 @@
         android:layout_marginTop="24dp"
         android:text="Update number of People in line"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/estwaittimelabel" />
+        app:layout_constraintTop_toBottomOf="@+id/pplinbarlabel" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -49,7 +49,7 @@
         android:text="People in line:" />
 
     <TextView
-        android:id="@+id/estwaittimelabel"
+        android:id="@+id/pplinbarlabel"
         android:layout_width="wrap_content"
         android:layout_height="23dp"
         android:layout_below="@+id/pplinlinelabel"
@@ -60,10 +60,10 @@
         android:layout_marginBottom="15dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
-        android:text="Estimated wait time:" />
+        android:text="People in the bar:" />
 
     <TextView
-        android:id="@+id/estwaittime"
+        android:id="@+id/pplinbar"
         android:layout_width="wrap_content"
         android:layout_height="18dp"
         android:layout_below="@+id/pplinline"
@@ -74,7 +74,7 @@
         android:layout_marginEnd="68dp"
         android:layout_marginRight="68dp"
         android:layout_marginBottom="20dp"
-        android:text="a time" />
+        android:text="Unknown" />
 
     <TextView
         android:id="@+id/pplinline"
@@ -83,9 +83,9 @@
         android:layout_below="@+id/barname"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="47dp"
-        android:layout_marginRight="47dp"
-        android:text="a number" />
+        android:layout_marginTop="21dp"
+        android:layout_marginEnd="65dp"
+        android:layout_marginRight="65dp"
+        android:text="Unknown" />
 
 </RelativeLayout>

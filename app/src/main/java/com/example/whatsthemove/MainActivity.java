@@ -11,10 +11,13 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,6 +41,11 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (!haveNetwork()) {
+            Toast.makeText(MainActivity.this, "You are not connected to the internet. " +
+                    "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
+        }
+
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
@@ -53,6 +61,18 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
         mainRecyclerView.addItemDecoration(dividerItemDecoration);
 
+    }
+
+    private boolean haveNetwork(){
+        boolean have_WIFI= false;
+        boolean have_MobileData = false;
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo[] networkInfos = connectivityManager.getAllNetworkInfo();
+        for(NetworkInfo info:networkInfos){
+            if (info.getTypeName().equalsIgnoreCase("WIFI"))if (info.isConnected())have_WIFI=true;
+            if (info.getTypeName().equalsIgnoreCase("MOBILE DATA"))if (info.isConnected())have_MobileData=true;
+        }
+        return have_WIFI||have_MobileData;
     }
 
     public void gotoUpdate(TextView myTextView, ImageView myImageView) {
@@ -128,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private int checkWhiskeys() {
         Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int stats = 1;
 
@@ -135,18 +156,39 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Sunday - Saturday: 11am - 2am
         switch (day) {
             case Calendar.SUNDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.MONDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.TUESDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.WEDNESDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.THURSDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.FRIDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
             case Calendar.SATURDAY:
+                if (time > 2 && time < 11 ) {
+                    stats = 0;
+                }
                 break;
         }
         return stats;
@@ -154,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private int checkMondays() {
         Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int stats = 1;
 
@@ -163,18 +206,39 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Friday - Saturday = 4pm - 2am
         switch (day) {
             case Calendar.SUNDAY:
+                if (time > 2) {
+                    stats = 0;
+                }
                 break;
             case Calendar.MONDAY:
+                if (time < 19) {
+                    stats = 0;
+                }
                 break;
             case Calendar.TUESDAY:
+                if (time > 2 && time < 19) {
+                    stats = 0;
+                }
                 break;
             case Calendar.WEDNESDAY:
+                if (time > 2 && time < 19) {
+                    stats = 0;
+                }
                 break;
             case Calendar.THURSDAY:
+                if (time > 2 && time < 19) {
+                    stats = 0;
+                }
                 break;
             case Calendar.FRIDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
             case Calendar.SATURDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
         }
         return stats;
@@ -182,29 +246,50 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private int checkKKlub() {
         Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int stats = 1;
 
         //Hours
-        //Sunday = 9pm - 2am
+        //Sunday = 8pm - 2am
         //Monday = Closed
-        //Tuesday - Friday = 8am - 2am
+        //Tuesday - Friday = 2pm - 2am
         //Saturday = 11am - 2am
         switch (day) {
             case Calendar.SUNDAY:
+                if (time > 2 && time < 20) {
+                    stats = 0;
+                }
                 break;
             case Calendar.MONDAY:
-                stats = 0;
+                if (time > 2) {
+                    stats = 0;
+                }
                 break;
             case Calendar.TUESDAY:
+                if (time < 14) {
+                    stats = 0;
+                }
                 break;
             case Calendar.WEDNESDAY:
+                if (time > 2 && time < 14) {
+                    stats = 0;
+                }
                 break;
             case Calendar.THURSDAY:
+                if (time > 2 && time < 14) {
+                    stats = 0;
+                }
                 break;
             case Calendar.FRIDAY:
+                if (time > 2 && time < 14) {
+                    stats = 0;
+                }
                 break;
             case Calendar.SATURDAY:
+                if (time > 2 && time < 11) {
+                    stats = 0;
+                }
                 break;
         }
         return stats;
@@ -212,6 +297,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private int checkUU() {
         Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int stats = 1;
 
@@ -221,20 +307,37 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Tuesday - Saturday = 4pm - 2am
         switch (day) {
             case Calendar.SUNDAY:
-                stats = 0;
+                if (time > 2) {
+                    stats = 0;
+                }
                 break;
             case Calendar.MONDAY:
                 stats = 0;
                 break;
             case Calendar.TUESDAY:
+                if (time < 16) {
+                    stats = 0;
+                }
                 break;
             case Calendar.WEDNESDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
             case Calendar.THURSDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
             case Calendar.FRIDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
             case Calendar.SATURDAY:
+                if (time > 2 && time < 16) {
+                    stats = 0;
+                }
                 break;
         }
         return stats;
@@ -242,6 +345,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private int checkChasers() {
         Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
         int stats = 1;
 
@@ -252,19 +356,39 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Saturday = Noon - 2am
         switch (day) {
             case Calendar.SUNDAY:
+                if (time > 2 && time < 12) {
+                    stats = 0;
+                }
                 break;
             case Calendar.MONDAY:
-                stats = 0;
+                if (time > 2) {
+                    stats = 0;
+                }
                 break;
             case Calendar.TUESDAY:
+                if (time < 18) {
+                    stats = 0;
+                }
                 break;
             case Calendar.WEDNESDAY:
+                if (time > 2 && time < 18) {
+                    stats = 0;
+                }
                 break;
             case Calendar.THURSDAY:
+                if (time > 2 && time < 18) {
+                    stats = 0;
+                }
                 break;
             case Calendar.FRIDAY:
+                if (time > 2 && time < 18) {
+                    stats = 0;
+                }
                 break;
             case Calendar.SATURDAY:
+                if (time > 2 && time < 12) {
+                    stats = 0;
+                }
                 break;
         }
         return stats;
