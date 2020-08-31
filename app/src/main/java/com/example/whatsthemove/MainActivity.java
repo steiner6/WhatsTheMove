@@ -1,13 +1,17 @@
 package com.example.whatsthemove;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,16 +22,23 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity implements MainAdapter.AdapterInterface {
 
     private RecyclerView mainRecyclerView;
     private MainAdapter mainAdapter;
     private LinearLayoutManager mainManager;
+    private GeofencingClient geofencingClient;
+    private PendingIntent geofencePendingIntent;
     private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
 
@@ -35,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private List<Integer> barPics = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
     private List<Integer> barStatus = new ArrayList<>();
+    private List<String> fences = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                     "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
         }
 
+        createGfences();
+
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
@@ -54,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         mainManager = new LinearLayoutManager(this);
         mainRecyclerView = findViewById(R.id.mainRecyclerView);
         mainRecyclerView.setLayoutManager(mainManager);
-        mainAdapter = new MainAdapter(this, barNames, barPics, tags, listener, barStatus);
+        mainAdapter = new MainAdapter(this, barNames, barPics, tags, listener, barStatus, fences);
         mainRecyclerView.setAdapter(mainAdapter);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mainRecyclerView.getContext(),
                 mainManager.VERTICAL);
@@ -63,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     }
 
-    private boolean haveNetwork(){
+    private boolean haveNetwork() {
         boolean have_WIFI= false;
         boolean have_MobileData = false;
         ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
@@ -75,7 +89,60 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         return have_WIFI||have_MobileData;
     }
 
-    public void gotoUpdate(TextView myTextView, ImageView myImageView) {
+    public void createGfences() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+
+        geofencingClient = LocationServices.getGeofencingClient(this);
+
+        Geofence chasersGeofence = buildGeofence("chasersGeofence", 43.074200, -89.392090, 25);
+        Geofence doubleuGeofence = buildGeofence("doubleuGeofence", 43.073574, -89.396809, 25);
+        Geofence mondaysGeofence = buildGeofence("mondaysGeofence", 43.074634, -89.394614, 20);
+        Geofence kklubGeofence = buildGeofence("kklubGeofence", 43.075647, -89.397010, 20);
+        Geofence whiskeysGeofence = buildGeofence("whiskeysGeofence", 43.075149, -89.394798, 25);
+
+        geofencingClient.addGeofences(getGeofencingRequest(chasersGeofence), getGeofencePendingIntent());
+        geofencingClient.addGeofences(getGeofencingRequest(doubleuGeofence), getGeofencePendingIntent());
+        geofencingClient.addGeofences(getGeofencingRequest(mondaysGeofence), getGeofencePendingIntent());
+        geofencingClient.addGeofences(getGeofencingRequest(kklubGeofence), getGeofencePendingIntent());
+        geofencingClient.addGeofences(getGeofencingRequest(whiskeysGeofence), getGeofencePendingIntent());
+    }
+
+    private Geofence buildGeofence(String string, double lat, double lng, int rad) {
+        Geofence geofence = new Geofence.Builder()
+                .setRequestId(string)
+                .setCircularRegion(lat, lng, rad)
+                .setExpirationDuration(10800000) //3 hours in milliseconds
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                //.setLoiteringDelay(180000)
+                .build();
+        return geofence;
+    }
+
+    private GeofencingRequest getGeofencingRequest(Geofence geofence) {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofence(geofence);
+        return builder.build();
+    }
+
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (geofencePendingIntent != null) {
+            return geofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceBroadcastReceiver.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+        return geofencePendingIntent;
+    }
+
+
+    public void gotoUpdate(TextView myTextView, ImageView myImageView, TextView inbar) {
         Intent intent = new Intent(this, UpdateBarActivity.class);
 
         //Get selected bar-to-update name
@@ -83,6 +150,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
         //Get selected bar-to-update status
         Integer s = Integer.parseInt(myTextView.getTag().toString());
+
+        //Get bar-to-update geofence id
+        String g = inbar.getText().toString();
 
         //Get selected bar-to-update picture
         String tag = (String) myImageView.getTag();
@@ -98,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         intent.putExtra("picture", b);
         intent.putExtra("tag", tag);
         intent.putExtra("stat", s);
+        intent.putExtra("geofence", g);
 
         //Go to update bar activity
         startActivity(intent);
@@ -116,30 +187,35 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         tags.add("chasers");
         status = checkChasers();
         barStatus.add(status);
+        fences.add("chasersGeofence");
 
         barNames.add("The Double U");
         barPics.add(R.drawable.doubleu);
         tags.add("doubleu");
         status = checkUU();
         barStatus.add(status);
+        fences.add("doubleuGeofence");
 
         barNames.add("The Kollege Klub");
         barPics.add(R.drawable.kklub);
         tags.add("kklub");
         status = checkKKlub();
         barStatus.add(status);
+        fences.add("kklubGeofence");
 
         barNames.add("Mondays");
         barPics.add(R.drawable.mondays);
         tags.add("mondays");
         status = checkMondays();
         barStatus.add(status);
+        fences.add("mondaysGeofence");
 
         barNames.add("Whiskey Jacks Saloon");
         barPics.add(R.drawable.whiskyjacks);
         tags.add("whiskyjacks");
         status = checkWhiskeys();
         barStatus.add(status);
+        fences.add("whiskeysGeofence");
 
         //barNames.add("The Karaoke Kid");
         //barPics.add(R.drawable.kkid);

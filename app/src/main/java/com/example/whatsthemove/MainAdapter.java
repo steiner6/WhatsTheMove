@@ -24,8 +24,9 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     private LayoutInflater mainInflater;
     private AdapterInterface listener;
     private List<Integer> barStatus;
+    private List<String> fences;
 
-    public MainAdapter(Context context, List<String> bn, List<Integer> bp, List<String> tg, AdapterInterface listener, List<Integer> stat) {
+    public MainAdapter(Context context, List<String> bn, List<Integer> bp, List<String> tg, AdapterInterface listener, List<Integer> stat, List<String> fences) {
         this.context = context;
         this.mainInflater = LayoutInflater.from(context);
         this.mainAdaptBarNames = bn;
@@ -33,6 +34,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         this.mainAdaptTags = tg;
         this.listener = listener;
         this.barStatus = stat;
+        this.fences = fences;
     }
 
     public MainAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -44,26 +46,31 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     public void onBindViewHolder (final MainAdapter.ViewHolder holder, final int position) {
         holder.myImageView.setImageResource(mainAdaptBarPics.get(position));
         holder.myImageView.setTag(mainAdaptTags.get(position));
-        holder.myTextView.setText(mainAdaptBarNames.get(position));
-        holder.myTextView.setTag(barStatus.get(position));
+        holder.inlineTextView.setText(mainAdaptBarNames.get(position));
+        holder.inlineTextView.setTag(barStatus.get(position));
+        holder.inbarTextView.setTag(fences.get(position));
 
-        String tag = (String) holder.myImageView.getTag();
-        int status = Integer.parseInt(holder.myTextView.getTag().toString());
+        String inline = (String) holder.myImageView.getTag();
+        String inbar = (String) holder.inbarTextView.getTag();
+        int status = Integer.parseInt(holder.inlineTextView.getTag().toString());
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        final DatabaseReference myRef = database.getReference(tag);
+        final DatabaseReference line = database.getReference(inline);
+        final DatabaseReference bar = database.getReference(inbar);
+
+        //Update data if bar is open
         if (status == 1) {
-            myRef.addValueEventListener(new ValueEventListener() {
+            //Get number of people in line
+            line.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
                     if (value == "Closed") {
-                        myRef.setValue(0);
+                        line.setValue("0");
                         holder.ppl.setText("0");
                     } else {
                         holder.ppl.setText(value);
                     }
-
                 }
 
                 @Override
@@ -71,15 +78,44 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
                     error.toException();
                 }
             });
+
+            //Get number of people in bar
+            bar.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.getValue(String.class);
+                    holder.inbarTextView.setText(value);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+
+        //Set bar to closed and people in bar to 0 if bar is closed
         } else {
-            myRef.setValue("Closed");
-            myRef.addValueEventListener(new ValueEventListener() {
+            line.setValue("Closed");
+            line.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
                     holder.ppl.setText(value);
                 }
 
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+
+            bar.setValue("0");
+            bar.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.getValue(String.class);
+                    holder.inbarTextView.setText(value);
+                }
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     error.toException();
@@ -95,26 +131,28 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        TextView myTextView;
+        TextView inlineTextView;
+        TextView inbarTextView;
         TextView ppl;
         ImageView myImageView;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.barname);
+            inlineTextView = itemView.findViewById(R.id.barname);
             myImageView = itemView.findViewById(R.id.barpic);
             ppl = itemView.findViewById(R.id.pplinline);
+            inbarTextView = itemView.findViewById(R.id.pplinbar);
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            listener.gotoUpdate(myTextView, myImageView);
+            listener.gotoUpdate(inlineTextView, myImageView, inbarTextView);
         }
     }
 
     public interface AdapterInterface {
-         void gotoUpdate(TextView myTextView, ImageView view);
+         void gotoUpdate(TextView myTextView, ImageView view, TextView inbar);
     }
 
 }

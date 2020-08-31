@@ -24,6 +24,7 @@ public class UpdateBarActivity extends AppCompatActivity {
 
     String name;
     String tag;
+    String geofence;
     Button updateButton;
 
     @Override
@@ -36,7 +37,8 @@ public class UpdateBarActivity extends AppCompatActivity {
 
         String a = bundle.getString("name");
         String t = bundle.getString("tag");
-        setName(a, t);
+        String gid = bundle.getString("geofence");
+        setName(a, t, gid);
         final Integer barStatus = bundle.getInt("stat");
         byte[] b = bundle.getByteArray("picture");
         Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
@@ -151,13 +153,28 @@ public class UpdateBarActivity extends AppCompatActivity {
 
     public void seeUpdate() {
         final TextView pplinline = findViewById(R.id.pplinline);
+        final TextView pplinbar = findViewById(R.id.pplinbar);
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference(tag);
-        myRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference inline = database.getReference(tag);
+        DatabaseReference inbar = database.getReference(geofence);
+        inline.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String value = snapshot.getValue(String.class);
                 pplinline.setText(value);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                error.toException();
+            }
+        });
+
+        inbar.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String value = snapshot.getValue(String.class);
+                pplinbar.setText(value);
             }
 
             @Override
@@ -172,9 +189,10 @@ public class UpdateBarActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void setName(String a, String t) {
+    public void setName(String a, String t, String g) {
         name = a;
         tag = t;
+        geofence = g;
     }
 
 }
