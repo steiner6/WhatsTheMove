@@ -1,5 +1,6 @@
 package com.example.whatsthemove;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -17,7 +18,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,6 +30,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.snackbar.Snackbar;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,12 +46,15 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private PendingIntent geofencePendingIntent;
     private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private List<String> barNames = new ArrayList<>();
     private List<Integer> barPics = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
     private List<Integer> barStatus = new ArrayList<>();
     private List<String> fences = new ArrayList<>();
+    private List<Geofence> mGeofenceList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +65,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
             Toast.makeText(MainActivity.this, "You are not connected to the internet. " +
                     "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
         }
-
-        createGfences();
 
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -75,6 +81,19 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
         mainRecyclerView.addItemDecoration(dividerItemDecoration);
 
+        geofencingClient = LocationServices.getGeofencingClient(this);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (!checkPermissions()) {
+            requestPermissions();
+        } else {
+            createGfences();
+        }
     }
 
     private boolean haveNetwork() {
@@ -89,41 +108,136 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         return have_WIFI||have_MobileData;
     }
 
-    public void createGfences() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+    private boolean checkPermissions() {
+        int permissionState = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+        return permissionState == PackageManager.PERMISSION_GRANTED;
+    }
+    private void requestPermissions() {
+        boolean shouldProvideRationale =
+                ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.ACCESS_FINE_LOCATION);
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            showSnackbar(R.string.permission_rationale, android.R.string.ok,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request permission
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                        }
+                    });
+        } else {
+            Log.i(TAG, "Requesting permission");
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
         }
-
-        geofencingClient = LocationServices.getGeofencingClient(this);
-
-        Geofence chasersGeofence = buildGeofence("chasersGeofence", 43.074200, -89.392090, 25);
-        Geofence doubleuGeofence = buildGeofence("doubleuGeofence", 43.073574, -89.396809, 25);
-        Geofence mondaysGeofence = buildGeofence("mondaysGeofence", 43.074634, -89.394614, 20);
-        Geofence kklubGeofence = buildGeofence("kklubGeofence", 43.075647, -89.397010, 20);
-        Geofence whiskeysGeofence = buildGeofence("whiskeysGeofence", 43.075149, -89.394798, 25);
-
-        geofencingClient.addGeofences(getGeofencingRequest(chasersGeofence), getGeofencePendingIntent());
-        geofencingClient.addGeofences(getGeofencingRequest(doubleuGeofence), getGeofencePendingIntent());
-        geofencingClient.addGeofences(getGeofencingRequest(mondaysGeofence), getGeofencePendingIntent());
-        geofencingClient.addGeofences(getGeofencingRequest(kklubGeofence), getGeofencePendingIntent());
-        geofencingClient.addGeofences(getGeofencingRequest(whiskeysGeofence), getGeofencePendingIntent());
     }
 
-    private Geofence buildGeofence(String string, double lat, double lng, int rad) {
-        Geofence geofence = new Geofence.Builder()
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionResult");
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "Permission granted.");
+                createGfences();
+            } else {
+                // Permission denied.
+
+                // Notify the user via a SnackBar that they have rejected a core permission for the
+                // app, which makes the Activity useless. In a real app, core permissions would
+                // typically be best requested during a welcome-screen flow.
+
+                // Additionally, it is important to remember that a permission might have been
+                // rejected without asking the user for permission (device policy or "Never ask
+                // again" prompts). Therefore, a user interface affordance is typically implemented
+                // when permissions are denied. Otherwise, your app could appear unresponsive to
+                // touches or interactions which have required permissions.
+                showSnackbar(R.string.permission_denied_explanation, R.string.settings,
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package",
+                                        BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        });
+            }
+        }
+    }
+
+    private void showSnackbar(final String text) {
+        View container = findViewById(android.R.id.content);
+        if (container != null) {
+            Snackbar.make(container, text, Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void showSnackbar(final int mainTextStringId, final int actionStringId,
+                              View.OnClickListener listener) {
+        Snackbar.make(
+                findViewById(android.R.id.content),
+                getString(mainTextStringId),
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(getString(actionStringId), listener).show();
+    }
+
+    @SuppressWarnings("MissingPermission")
+    public void createGfences() {
+
+        if (!checkPermissions()) {
+            showSnackbar(getString(R.string.insufficient_permissions));
+            return;
+        }
+
+        buildGeofence("chasersGeofence", 43.074200, -89.392090, 25);
+        buildGeofence("doubleuGeofence", 43.073574, -89.396809, 25);
+        buildGeofence("mondaysGeofence", 43.074634, -89.394614, 20);
+        buildGeofence("kklubGeofence", 43.075647, -89.397010, 20);
+        buildGeofence("whiskeysGeofence", 43.075149, -89.394798, 25);
+
+        geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent());
+
+    }
+
+    private void buildGeofence(String string, double lat, double lng, int rad) {
+        mGeofenceList.add(new Geofence.Builder()
                 .setRequestId(string)
                 .setCircularRegion(lat, lng, rad)
                 .setExpirationDuration(10800000) //3 hours in milliseconds
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                 //.setLoiteringDelay(180000)
-                .build();
-        return geofence;
+                .build());
+        return;
     }
 
-    private GeofencingRequest getGeofencingRequest(Geofence geofence) {
+    private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-        builder.addGeofence(geofence);
+        builder.addGeofences(mGeofenceList);
         return builder.build();
     }
 
@@ -437,9 +551,10 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.MONDAY:
-                if (time > 2) {
-                    stats = 0;
-                }
+                //if (time > 2) {
+                //    stats = 0;
+                //}
+                stats = 1;
                 break;
             case Calendar.TUESDAY:
                 if (time < 18) {

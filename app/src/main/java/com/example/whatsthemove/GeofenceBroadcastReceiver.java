@@ -55,7 +55,17 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
                     Integer val = Integer.parseInt(value);
-                    peopleinbar[0] = val;
+                    if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+                        val = val + 1;
+                        myRef.setValue(val);
+                    } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+                        if (val <= 0) {
+                            myRef.setValue("0");
+                        } else {
+                            val = val - 1;
+                            myRef.setValue(val);
+                        }
+                    }
                 }
 
                 @Override
@@ -63,16 +73,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                     error.toException();
                 }
             });
-            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                peopleinbar[0] = peopleinbar[0] + 1;
-                myRef.setValue(peopleinbar[0]);
-            } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-                if (peopleinbar[0] == 0) {
-                } else {
-                    peopleinbar[0] = peopleinbar[0] - 1;
-                    myRef.setValue(peopleinbar[0]);
-                }
-            }
+
 
         }
     }
