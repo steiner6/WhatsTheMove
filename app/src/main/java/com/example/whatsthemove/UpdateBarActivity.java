@@ -170,7 +170,7 @@ public class UpdateBarActivity extends AppCompatActivity {
             }
         });
 
-        inbar.addValueEventListener(new ValueEventListener() {
+        inbar.child("tracked").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String value = snapshot.getValue(String.class);

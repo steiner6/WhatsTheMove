@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
-import android.app.PendingIntent;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,8 +16,9 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -25,12 +26,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofencingClient;
-import com.google.android.gms.location.GeofencingRequest;
-import com.google.android.gms.location.LocationServices;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,8 +47,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private RecyclerView mainRecyclerView;
     private MainAdapter mainAdapter;
     private LinearLayoutManager mainManager;
-    private GeofencingClient geofencingClient;
-    private PendingIntent geofencePendingIntent;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
     private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -54,22 +59,41 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private List<String> tags = new ArrayList<>();
     private List<Integer> barStatus = new ArrayList<>();
     private List<String> fences = new ArrayList<>();
-    private List<Geofence> mGeofenceList = new ArrayList<>();
+    private List<Double> lat = new ArrayList<>();
+    private List<Double> lng = new ArrayList<>();
+    final private int RADIUS = 25;
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (!haveNetwork()) {
+        /*if (!haveNetwork()) {
             Toast.makeText(MainActivity.this, "You are not connected to the internet. " +
                     "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
+        }*/
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationListen();
+        startListening();
+        if (!checkPermissions()) {
+            requestPermissions();
         }
+
+        addToArrays();
+
+        /*int i = 0;
+        for (String fence : fences) {
+            createGfences(fence, lat.get(i), lng.get(i));
+            i++;
+        }*/
+        getLocation();
 
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
-        addToArrays();
+
 
         mainManager = new LinearLayoutManager(this);
         mainRecyclerView = findViewById(R.id.mainRecyclerView);
@@ -81,22 +105,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
         mainRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        geofencingClient = LocationServices.getGeofencingClient(this);
-
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        if (!checkPermissions()) {
-            requestPermissions();
-        } else {
-            createGfences();
-        }
-    }
-
-    private boolean haveNetwork() {
+    /*private boolean haveNetwork() {
         boolean have_WIFI= false;
         boolean have_MobileData = false;
         ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
@@ -106,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
             if (info.getTypeName().equalsIgnoreCase("MOBILE DATA"))if (info.isConnected())have_MobileData=true;
         }
         return have_WIFI||have_MobileData;
-    }
+    }*/
 
     private boolean checkPermissions() {
         int permissionState = ActivityCompat.checkSelfPermission(this,
@@ -157,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "Permission granted.");
-                createGfences();
+                startListening();
             } else {
                 // Permission denied.
 
@@ -196,8 +207,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         }
     }
 
-    private void showSnackbar(final int mainTextStringId, final int actionStringId,
-                              View.OnClickListener listener) {
+    private void showSnackbar(final int mainTextStringId, final int actionStringId, View.OnClickListener listener) {
         Snackbar.make(
                 findViewById(android.R.id.content),
                 getString(mainTextStringId),
@@ -205,54 +215,149 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 .setAction(getString(actionStringId), listener).show();
     }
 
-    @SuppressWarnings("MissingPermission")
-    public void createGfences() {
+    @SuppressLint("MissingPermission")
+    private void getLocation() {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location != null) {
+            updateLocationInfo(location);
+        }
+
+    }
+
+    private void startListening() {
+        if (checkPermissions()) {
+            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        }
+    }
+
+    private void updateLocationInfo(Location location) {
+        Log.i("Location info", location.toString());
+        double lat = location.getLatitude();
+        double lng = location.getLongitude();
+
+        GeoFire geofire;
+
+        for (String fence : fences) {
+            geofire = getGeofire(fence);
+            GeoQuery query = geofire.queryAtLocation(new GeoLocation(lat, lng), RADIUS);
+            query.addGeoQueryEventListener(new GeoQueryEventListener() {
+                @Override
+                public void onKeyEntered(String key, GeoLocation location) {
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    final DatabaseReference ref = database.getReference(key);
+                    ref.child("tracked").addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String value = snapshot.getValue(String.class);
+                            Integer val = Integer.parseInt(value);
+                            val = val+1;
+                            ref.setValue(val);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onKeyExited(String key) {
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    final DatabaseReference ref = database.getReference(key);
+                    ref.child("tracked").addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String value = snapshot.getValue(String.class);
+                            Integer val = Integer.parseInt(value);
+                            val = val-1;
+                            ref.setValue(val);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onKeyMoved(String key, GeoLocation location) {
+
+                }
+
+                @Override
+                public void onGeoQueryReady() {
+
+                }
+
+                @Override
+                public void onGeoQueryError(DatabaseError error) {
+
+                }
+            });
+        }
+
+
+
+    }
+
+    private void locationListen() {
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                updateLocationInfo(location);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        };
+    }
+
+
+    //@SuppressWarnings("MissingPermission")
+    public void createGfences(String fence, Double lat, Double lng) {
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.setLocation(fence, new GeoLocation(lat, lng));
+
+        DatabaseReference childref = FirebaseDatabase.getInstance().getReference(fence);
+        //createTrackedChildren(childref);
+        //removeTrackedChildren(childref);
 
         if (!checkPermissions()) {
             showSnackbar(getString(R.string.insufficient_permissions));
             return;
         }
 
-        buildGeofence("chasersGeofence", 43.074200, -89.392090, 25);
-        buildGeofence("doubleuGeofence", 43.073574, -89.396809, 25);
-        buildGeofence("mondaysGeofence", 43.074634, -89.394614, 20);
-        buildGeofence("kklubGeofence", 43.075647, -89.397010, 20);
-        buildGeofence("whiskeysGeofence", 43.075149, -89.394798, 25);
-
-        geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent());
-
     }
 
-    private void buildGeofence(String string, double lat, double lng, int rad) {
-        mGeofenceList.add(new Geofence.Builder()
-                .setRequestId(string)
-                .setCircularRegion(lat, lng, rad)
-                .setExpirationDuration(10800000) //3 hours in milliseconds
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                //.setLoiteringDelay(180000)
-                .build());
-        return;
+    private void createTrackedChildren(DatabaseReference ref) {
+        ref.child("tracked").setValue("0");
     }
 
-    private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-        builder.addGeofences(mGeofenceList);
-        return builder.build();
+    private void removeTrackedChildren(DatabaseReference ref) {
+        ref.child("tracked").removeValue();
     }
 
-
-    private PendingIntent getGeofencePendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (geofencePendingIntent != null) {
-            return geofencePendingIntent;
-        }
-        Intent intent = new Intent(this, GeofenceBroadcastReceiver.class);
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-        // calling addGeofences() and removeGeofences().
-        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
-                FLAG_UPDATE_CURRENT);
-        return geofencePendingIntent;
+    private GeoFire getGeofire(String fence) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(fence);
+        GeoFire geoFire = new GeoFire(ref);
+        return geoFire;
     }
 
 
@@ -302,6 +407,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         status = checkChasers();
         barStatus.add(status);
         fences.add("chasersGeofence");
+        lat.add(43.074200);
+        lng.add(-89.392090);
 
         barNames.add("The Double U");
         barPics.add(R.drawable.doubleu);
@@ -309,6 +416,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         status = checkUU();
         barStatus.add(status);
         fences.add("doubleuGeofence");
+        lat.add(43.073574);
+        lng.add(-89.396809);
 
         barNames.add("The Kollege Klub");
         barPics.add(R.drawable.kklub);
@@ -316,6 +425,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         status = checkKKlub();
         barStatus.add(status);
         fences.add("kklubGeofence");
+        lat.add(43.075647);
+        lng.add(-89.397010);
 
         barNames.add("Mondays");
         barPics.add(R.drawable.mondays);
@@ -323,6 +434,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         status = checkMondays();
         barStatus.add(status);
         fences.add("mondaysGeofence");
+        lat.add(43.074634);
+        lng.add(-89.394614);
 
         barNames.add("Whiskey Jacks Saloon");
         barPics.add(R.drawable.whiskyjacks);
@@ -330,6 +443,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         status = checkWhiskeys();
         barStatus.add(status);
         fences.add("whiskeysGeofence");
+        lat.add(43.075149);
+        lng.add(-89.394798);
 
         //barNames.add("The Karaoke Kid");
         //barPics.add(R.drawable.kkid);
@@ -551,10 +666,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.MONDAY:
-                //if (time > 2) {
-                //    stats = 0;
-                //}
-                stats = 1;
+                if (time > 2) {
+                    stats = 0;
+                }
                 break;
             case Calendar.TUESDAY:
                 if (time < 18) {

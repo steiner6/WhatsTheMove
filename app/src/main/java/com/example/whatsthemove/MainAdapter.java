@@ -13,7 +13,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
@@ -35,6 +34,9 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         this.listener = listener;
         this.barStatus = stat;
         this.fences = fences;
+
+
+
     }
 
     public MainAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -80,7 +82,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
             });
 
             //Get number of people in bar
-            bar.addValueEventListener(new ValueEventListener() {
+            bar.child("tracked").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
@@ -109,8 +111,8 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
                 }
             });
 
-            bar.setValue("0");
-            bar.addValueEventListener(new ValueEventListener() {
+            bar.child("tracked").setValue("0");
+            bar.child("tracked").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
