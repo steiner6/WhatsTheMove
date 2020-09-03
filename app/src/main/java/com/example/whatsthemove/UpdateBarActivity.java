@@ -26,6 +26,7 @@ public class UpdateBarActivity extends AppCompatActivity {
     String tag;
     String geofence;
     Button updateButton;
+    int flag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +39,7 @@ public class UpdateBarActivity extends AppCompatActivity {
         String a = bundle.getString("name");
         String t = bundle.getString("tag");
         String gid = bundle.getString("geofence");
+        flag = bundle.getInt("flag");
         setName(a, t, gid);
         final Integer barStatus = bundle.getInt("stat");
         byte[] b = bundle.getByteArray("picture");
@@ -185,8 +187,10 @@ public class UpdateBarActivity extends AppCompatActivity {
     }
 
     public void gotoMain(View view) {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(this, MainActivity.class);
+        //intent.putExtra("flag", flag);
+        //startActivity(intent);
+        finish();
     }
 
     public void setName(String a, String t, String g) {

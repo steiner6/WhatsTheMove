@@ -35,8 +35,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         this.barStatus = stat;
         this.fences = fences;
 
-
-
     }
 
     public MainAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -58,7 +56,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference line = database.getReference(inline);
-        final DatabaseReference bar = database.getReference(inbar);
+        final DatabaseReference bar = database.getReference("locations/"+inbar);
 
         //Update data if bar is open
         if (status == 1) {

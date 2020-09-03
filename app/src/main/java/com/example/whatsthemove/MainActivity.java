@@ -26,6 +26,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private static final String TAG = MainActivity.class.getSimpleName();
 
+
     private List<String> barNames = new ArrayList<>();
     private List<Integer> barPics = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
@@ -61,7 +64,72 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private List<String> fences = new ArrayList<>();
     private List<Double> lat = new ArrayList<>();
     private List<Double> lng = new ArrayList<>();
-    final private int RADIUS = 25;
+    final private double RADIUS = 0.025;
+    private int flag = 0;
+
+    final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("locations");
+    final GeoFire geofire = new GeoFire(ref);
+    GeoQuery query = null;
+
+    GeoQueryEventListener geoQueryEventListener = new GeoQueryEventListener() {
+
+        @Override
+        public void onKeyEntered(final String key, GeoLocation location) {
+            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.child("tracked").getValue(String.class);
+                    Integer val = Integer.parseInt(value);
+                    val = val + 1;
+                    String sval = String.valueOf(val);
+                    ref.child(key).child("tracked").setValue(sval);
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+
+        }
+
+        @Override
+        public void onKeyExited(final String key) {
+            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    System.out.println(String.format("Key %s is no longer in the search area", key));
+                    String value = snapshot.child("tracked").getValue(String.class);
+                    Integer val = Integer.parseInt(value);
+                    val = val - 1;
+                    String sval = String.valueOf(val);
+                    ref.child(key).child("tracked").setValue(sval);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
+
+        @Override
+        public void onKeyMoved(String key, GeoLocation location) {
+
+        }
+
+        @Override
+        public void onGeoQueryReady() {
+
+        }
+
+        @Override
+        public void onGeoQueryError(DatabaseError error) {
+
+        }
+    };
+
 
     @SuppressLint("MissingPermission")
     @Override
@@ -90,10 +158,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         }*/
         getLocation();
 
-        SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("usrpref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-
-
 
         mainManager = new LinearLayoutManager(this);
         mainRecyclerView = findViewById(R.id.mainRecyclerView);
@@ -222,7 +288,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         if (location != null) {
             updateLocationInfo(location);
         }
-
     }
 
     private void startListening() {
@@ -233,74 +298,14 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private void updateLocationInfo(Location location) {
         Log.i("Location info", location.toString());
-        double lat = location.getLatitude();
-        double lng = location.getLongitude();
 
-        GeoFire geofire;
-
-        for (String fence : fences) {
-            geofire = getGeofire(fence);
-            GeoQuery query = geofire.queryAtLocation(new GeoLocation(lat, lng), RADIUS);
-            query.addGeoQueryEventListener(new GeoQueryEventListener() {
-                @Override
-                public void onKeyEntered(String key, GeoLocation location) {
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    final DatabaseReference ref = database.getReference(key);
-                    ref.child("tracked").addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            String value = snapshot.getValue(String.class);
-                            Integer val = Integer.parseInt(value);
-                            val = val+1;
-                            ref.setValue(val);
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onKeyExited(String key) {
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    final DatabaseReference ref = database.getReference(key);
-                    ref.child("tracked").addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            String value = snapshot.getValue(String.class);
-                            Integer val = Integer.parseInt(value);
-                            val = val-1;
-                            ref.setValue(val);
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onKeyMoved(String key, GeoLocation location) {
-
-                }
-
-                @Override
-                public void onGeoQueryReady() {
-
-                }
-
-                @Override
-                public void onGeoQueryError(DatabaseError error) {
-
-                }
-            });
+        GeoLocation geoLocation = new GeoLocation(location.getLatitude(), location.getLongitude());
+        if (query == null) {
+            query = geofire.queryAtLocation(geoLocation, RADIUS);
+            query.addGeoQueryEventListener(geoQueryEventListener);
+        } else {
+            query.setCenter(geoLocation);
         }
-
-
-
     }
 
     private void locationListen() {
@@ -327,15 +332,14 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         };
     }
 
-
     //@SuppressWarnings("MissingPermission")
     public void createGfences(String fence, Double lat, Double lng) {
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("locations");
         GeoFire geoFire = new GeoFire(ref);
         geoFire.setLocation(fence, new GeoLocation(lat, lng));
 
-        DatabaseReference childref = FirebaseDatabase.getInstance().getReference(fence);
+        DatabaseReference childref = FirebaseDatabase.getInstance().getReference("locations/" + fence);
         //createTrackedChildren(childref);
         //removeTrackedChildren(childref);
 
@@ -352,12 +356,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private void removeTrackedChildren(DatabaseReference ref) {
         ref.child("tracked").removeValue();
-    }
-
-    private GeoFire getGeofire(String fence) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(fence);
-        GeoFire geoFire = new GeoFire(ref);
-        return geoFire;
     }
 
 
@@ -388,6 +386,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         intent.putExtra("tag", tag);
         intent.putExtra("stat", s);
         intent.putExtra("geofence", g);
+        intent.putExtra("Flag", flag);
 
         //Go to update bar activity
         startActivity(intent);
@@ -671,9 +670,10 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.TUESDAY:
-                if (time < 18) {
+                /*if (time < 18) {
                     stats = 0;
-                }
+                }*/
+                stats=1;
                 break;
             case Calendar.WEDNESDAY:
                 if (time > 2 && time < 18) {
