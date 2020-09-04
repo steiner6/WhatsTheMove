@@ -48,15 +48,15 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         holder.myImageView.setTag(mainAdaptTags.get(position));
         holder.inlineTextView.setText(mainAdaptBarNames.get(position));
         holder.inlineTextView.setTag(barStatus.get(position));
-        holder.inbarTextView.setTag(fences.get(position));
+        holder.peepsinbarlabel.setTag(fences.get(position));
 
         String inline = (String) holder.myImageView.getTag();
-        String inbar = (String) holder.inbarTextView.getTag();
+        String gfencename = (String) holder.peepsinbarlabel.getTag();
         int status = Integer.parseInt(holder.inlineTextView.getTag().toString());
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         final DatabaseReference line = database.getReference(inline);
-        final DatabaseReference bar = database.getReference("locations/"+inbar);
+        final DatabaseReference bar = database.getReference("locations");
 
         //Update data if bar is open
         if (status == 1) {
@@ -65,11 +65,12 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
-                    if (value == "Closed") {
+                    try {
+                        Integer val = Integer.parseInt(value);
+                        holder.ppl.setText(value);
+                    } catch (NumberFormatException e) {
                         line.setValue("0");
                         holder.ppl.setText("0");
-                    } else {
-                        holder.ppl.setText(value);
                     }
                 }
 
@@ -109,8 +110,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
                 }
             });
 
-            bar.child("tracked").setValue("0");
-            bar.child("tracked").addValueEventListener(new ValueEventListener() {
+            /*bar.child(gfencename).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
@@ -120,8 +120,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
                 public void onCancelled(@NonNull DatabaseError error) {
                     error.toException();
                 }
-            });
-
+            });*/
         }
     }
 
@@ -135,24 +134,27 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         TextView inbarTextView;
         TextView ppl;
         ImageView myImageView;
+        TextView peepsinbarlabel;
 
         ViewHolder(View itemView) {
             super(itemView);
             inlineTextView = itemView.findViewById(R.id.barname);
             myImageView = itemView.findViewById(R.id.barpic);
-            ppl = itemView.findViewById(R.id.pplinline);
-            inbarTextView = itemView.findViewById(R.id.pplinbar);
+            ppl = itemView.findViewById(R.id.pplinlineadapt);
+            inbarTextView = itemView.findViewById(R.id.pplinbaradapt);
+            peepsinbarlabel = itemView.findViewById(R.id.pplinbaradaptlabel);
+
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            listener.gotoUpdate(inlineTextView, myImageView, inbarTextView);
+            listener.gotoUpdate(inlineTextView, myImageView, peepsinbarlabel);
         }
     }
 
     public interface AdapterInterface {
-         void gotoUpdate(TextView myTextView, ImageView view, TextView inbar);
+         void gotoUpdate(TextView myTextView, ImageView view, TextView gfencename);
     }
 
 }

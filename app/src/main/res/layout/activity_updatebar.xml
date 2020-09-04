@@ -88,27 +88,6 @@
         app:layout_constraintTop_toBottomOf="@+id/pplinlinelabel" />
 
     <TextView
-        android:id="@+id/pplinbar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/pplinline"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="76dp"
-        android:layout_marginLeft="76dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="112dp"
-        android:layout_marginRight="112dp"
-        android:layout_marginBottom="28dp"
-        android:text="Unknown"
-        app:layout_constraintBottom_toTopOf="@+id/editbutton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.058"
-        app:layout_constraintStart_toEndOf="@+id/pplinbarlabel"
-        app:layout_constraintTop_toBottomOf="@+id/pplinline" />
-
-    <TextView
         android:id="@+id/pplinline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -134,6 +113,17 @@
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pplinbarlabel" />
+
+    <TextView
+        android:id="@+id/peepinbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="Unknown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.387"
+        app:layout_constraintStart_toEndOf="@+id/pplinbarlabel"
+        app:layout_constraintTop_toBottomOf="@+id/pplinline" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

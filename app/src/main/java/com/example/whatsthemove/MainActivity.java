@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,13 +17,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -30,105 +25,32 @@ import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
-import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryEventListener;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
+import java.util.TooManyListenersException;
 
 public class MainActivity extends AppCompatActivity implements MainAdapter.AdapterInterface {
 
     private RecyclerView mainRecyclerView;
     private MainAdapter mainAdapter;
-    private LinearLayoutManager mainManager;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
+
     private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
-    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-    private static final String TAG = MainActivity.class.getSimpleName();
-
 
     private List<String> barNames = new ArrayList<>();
     private List<Integer> barPics = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
     private List<Integer> barStatus = new ArrayList<>();
+    private LinearLayoutManager mainManager;
     private List<String> fences = new ArrayList<>();
     private List<Double> lat = new ArrayList<>();
     private List<Double> lng = new ArrayList<>();
-    final private double RADIUS = 0.025;
-    private int flag = 0;
 
-    final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("locations");
-    final GeoFire geofire = new GeoFire(ref);
-    GeoQuery query = null;
 
-    GeoQueryEventListener geoQueryEventListener = new GeoQueryEventListener() {
-
-        @Override
-        public void onKeyEntered(final String key, GeoLocation location) {
-            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    String value = snapshot.child("tracked").getValue(String.class);
-                    Integer val = Integer.parseInt(value);
-                    val = val + 1;
-                    String sval = String.valueOf(val);
-                    ref.child(key).child("tracked").setValue(sval);
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-
-        }
-
-        @Override
-        public void onKeyExited(final String key) {
-            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    System.out.println(String.format("Key %s is no longer in the search area", key));
-                    String value = snapshot.child("tracked").getValue(String.class);
-                    Integer val = Integer.parseInt(value);
-                    val = val - 1;
-                    String sval = String.valueOf(val);
-                    ref.child(key).child("tracked").setValue(sval);
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-        }
-
-        @Override
-        public void onKeyMoved(String key, GeoLocation location) {
-
-        }
-
-        @Override
-        public void onGeoQueryReady() {
-
-        }
-
-        @Override
-        public void onGeoQueryError(DatabaseError error) {
-
-        }
-    };
 
 
     @SuppressLint("MissingPermission")
@@ -142,21 +64,29 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                     "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
         }*/
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        /*locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListen();
         startListening();
         if (!checkPermissions()) {
             requestPermissions();
-        }
+        }*/
 
         addToArrays();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+
+        if (!isMyServiceRunning(GeoLocationService.class)) {
+            Intent intent = new Intent(this, GeoLocationService.class);
+            startService(intent);
+        }
 
         /*int i = 0;
         for (String fence : fences) {
             createGfences(fence, lat.get(i), lng.get(i));
             i++;
         }*/
-        getLocation();
 
         SharedPreferences prefs = getSharedPreferences("usrpref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -185,151 +115,30 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         return have_WIFI||have_MobileData;
     }*/
 
-    private boolean checkPermissions() {
-        int permissionState = ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-        return permissionState == PackageManager.PERMISSION_GRANTED;
-    }
-    private void requestPermissions() {
-        boolean shouldProvideRationale =
-                ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION);
-
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
-            Log.i(TAG, "Displaying permission rationale to provide additional context.");
-            showSnackbar(R.string.permission_rationale, android.R.string.ok,
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            // Request permission
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                    REQUEST_PERMISSIONS_REQUEST_CODE);
-                        }
-                    });
-        } else {
-            Log.i(TAG, "Requesting permission");
-            // Request permission. It's possible this can be auto answered if device policy
-            // sets the permission in a given state or the user denied the permission
-            // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_PERMISSIONS_REQUEST_CODE);
-        }
-    }
 
     /**
      * Callback received when a permissions request has been completed.
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        Log.i(TAG, "onRequestPermissionResult");
-        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
-            if (grantResults.length <= 0) {
-                // If user interaction was interrupted, the permission request is cancelled and you
-                // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.");
-            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i(TAG, "Permission granted.");
-                startListening();
-            } else {
-                // Permission denied.
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-                // Notify the user via a SnackBar that they have rejected a core permission for the
-                // app, which makes the Activity useless. In a real app, core permissions would
-                // typically be best requested during a welcome-screen flow.
-
-                // Additionally, it is important to remember that a permission might have been
-                // rejected without asking the user for permission (device policy or "Never ask
-                // again" prompts). Therefore, a user interface affordance is typically implemented
-                // when permissions are denied. Otherwise, your app could appear unresponsive to
-                // touches or interactions which have required permissions.
-                showSnackbar(R.string.permission_denied_explanation, R.string.settings,
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                // Build intent that displays the App settings screen.
-                                Intent intent = new Intent();
-                                intent.setAction(
-                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                Uri uri = Uri.fromParts("package",
-                                        BuildConfig.APPLICATION_ID, null);
-                                intent.setData(uri);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                            }
-                        });
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (!isMyServiceRunning(GeoLocationService.class)) {
+                Intent intent = new Intent(this, GeoLocationService.class);
+                startService(intent);
             }
         }
     }
 
-    private void showSnackbar(final String text) {
-        View container = findViewById(android.R.id.content);
-        if (container != null) {
-            Snackbar.make(container, text, Snackbar.LENGTH_LONG).show();
-        }
-    }
-
-    private void showSnackbar(final int mainTextStringId, final int actionStringId, View.OnClickListener listener) {
-        Snackbar.make(
-                findViewById(android.R.id.content),
-                getString(mainTextStringId),
-                Snackbar.LENGTH_INDEFINITE)
-                .setAction(getString(actionStringId), listener).show();
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getLocation() {
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (location != null) {
-            updateLocationInfo(location);
-        }
-    }
-
-    private void startListening() {
-        if (checkPermissions()) {
-            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        }
-    }
-
-    private void updateLocationInfo(Location location) {
-        Log.i("Location info", location.toString());
-
-        GeoLocation geoLocation = new GeoLocation(location.getLatitude(), location.getLongitude());
-        if (query == null) {
-            query = geofire.queryAtLocation(geoLocation, RADIUS);
-            query.addGeoQueryEventListener(geoQueryEventListener);
-        } else {
-            query.setCenter(geoLocation);
-        }
-    }
-
-    private void locationListen() {
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                updateLocationInfo(location);
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
             }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-
-            }
-        };
+        }
+        return false;
     }
 
     //@SuppressWarnings("MissingPermission")
@@ -343,10 +152,10 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //createTrackedChildren(childref);
         //removeTrackedChildren(childref);
 
-        if (!checkPermissions()) {
+        /*if (!checkPermissions()) {
             showSnackbar(getString(R.string.insufficient_permissions));
             return;
-        }
+        }*/
 
     }
 
@@ -359,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     }
 
 
-    public void gotoUpdate(TextView myTextView, ImageView myImageView, TextView inbar) {
+    public void gotoUpdate(TextView myTextView, ImageView myImageView, TextView gfencename) {
         Intent intent = new Intent(this, UpdateBarActivity.class);
 
         //Get selected bar-to-update name
@@ -369,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         Integer s = Integer.parseInt(myTextView.getTag().toString());
 
         //Get bar-to-update geofence id
-        String g = inbar.getText().toString();
+        String g = gfencename.getTag().toString();
 
         //Get selected bar-to-update picture
         String tag = (String) myImageView.getTag();
@@ -386,7 +195,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         intent.putExtra("tag", tag);
         intent.putExtra("stat", s);
         intent.putExtra("geofence", g);
-        intent.putExtra("Flag", flag);
 
         //Go to update bar activity
         startActivity(intent);
@@ -670,10 +478,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.TUESDAY:
-                /*if (time < 18) {
+                if (time < 18) {
                     stats = 0;
-                }*/
-                stats=1;
+                }
                 break;
             case Calendar.WEDNESDAY:
                 if (time > 2 && time < 18) {
@@ -697,6 +504,16 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 break;
         }
         return stats;
+    }
+
+    @Override
+    protected void onDestroy() {
+        //stopService(mServiceIntent);
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction("restartservice");
+        broadcastIntent.setClass(this, Restarter.class);
+        this.sendBroadcast(broadcastIntent);
+        super.onDestroy();
     }
 
 }

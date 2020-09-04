@@ -26,7 +26,6 @@ public class UpdateBarActivity extends AppCompatActivity {
     String tag;
     String geofence;
     Button updateButton;
-    int flag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +38,6 @@ public class UpdateBarActivity extends AppCompatActivity {
         String a = bundle.getString("name");
         String t = bundle.getString("tag");
         String gid = bundle.getString("geofence");
-        flag = bundle.getInt("flag");
         setName(a, t, gid);
         final Integer barStatus = bundle.getInt("stat");
         byte[] b = bundle.getByteArray("picture");
@@ -151,15 +149,18 @@ public class UpdateBarActivity extends AppCompatActivity {
                 .show();
         }
 
+        seeUpdate();
+
     }
 
     public void seeUpdate() {
+
         final TextView pplinline = findViewById(R.id.pplinline);
-        final TextView pplinbar = findViewById(R.id.pplinbar);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference inline = database.getReference(tag);
-        DatabaseReference inbar = database.getReference(geofence);
-        inline.addValueEventListener(new ValueEventListener() {
+        final TextView pplinbar = findViewById(R.id.peepinbar);
+        final DatabaseReference locationDatabase = FirebaseDatabase.getInstance().getReference().child("locations");
+        final DatabaseReference inline = FirebaseDatabase.getInstance().getReference(tag);
+
+        inline.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String value = snapshot.getValue(String.class);
@@ -172,10 +173,10 @@ public class UpdateBarActivity extends AppCompatActivity {
             }
         });
 
-        inbar.child("tracked").addValueEventListener(new ValueEventListener() {
+        locationDatabase.child(geofence).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String value = snapshot.getValue(String.class);
+                String value = snapshot.child("tracked").getValue(String.class);
                 pplinbar.setText(value);
             }
 
@@ -187,9 +188,6 @@ public class UpdateBarActivity extends AppCompatActivity {
     }
 
     public void gotoMain(View view) {
-        //Intent intent = new Intent(this, MainActivity.class);
-        //intent.putExtra("flag", flag);
-        //startActivity(intent);
         finish();
     }
 
