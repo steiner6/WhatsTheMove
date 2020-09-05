@@ -27,19 +27,6 @@
 
         <activity android:name=".UpdateBarActivity"></activity>
 
-        <service android:name=".GeoLocationService"
-            android:enabled="true">
-        </service>
-
-        <receiver
-            android:name="Restarter"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="restartservice" />
-            </intent-filter>
-        </receiver>
-
     </application>
 
 </manifest>

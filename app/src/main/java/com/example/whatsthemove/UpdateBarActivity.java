@@ -24,37 +24,64 @@ public class UpdateBarActivity extends AppCompatActivity {
 
     String name;
     String tag;
-    String geofence;
-    Button updateButton;
+    String geofenceID;
+    String gkey;
+    Integer barStatus;
+    Boolean presentFlag;
+    Button updatelineButton;
+    Button updatebarButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_updatebar);
 
+        updatelineButton = findViewById(R.id.editlinebutton);
+        updatebarButton = findViewById(R.id.editinbarbutton);
+
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
 
-        String a = bundle.getString("name");
-        String t = bundle.getString("tag");
-        String gid = bundle.getString("geofence");
-        setName(a, t, gid);
-        final Integer barStatus = bundle.getInt("stat");
+        name = bundle.getString("name");
+        tag = bundle.getString("tag");
+        geofenceID = bundle.getString("geofence");
+        gkey = bundle.getString("gkey");
+        presentFlag = bundle.getBoolean("presentFlag");
+        barStatus = bundle.getInt("stat");
+
         byte[] b = bundle.getByteArray("picture");
         Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
         TextView title = findViewById(R.id.title);
         ImageView bitimage = findViewById(R.id.bitimage);
-        title.setText(a);
+        title.setText(name);
         bitimage.setImageBitmap(bmp);
 
         seeUpdate();
 
-        updateButton = findViewById(R.id.editbutton);
-        updateButton.setOnClickListener(new View.OnClickListener() {
+        updatelineButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (barStatus == 1) {
-                    AttentionDialog(view);
+                    if (geofenceID.equals(gkey) && presentFlag == true) {
+                        AttentionDialogLine(view);
+                    } else {
+                        notInBarDialog(view);
+                    }
+                } else {
+                    ClosedDialog();
+                }
+            }
+        });
+
+        updatebarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (barStatus == 1) {
+                    if (geofenceID.equals(gkey) && presentFlag == true) {
+                        AttentionDialogBar(view);
+                    } else {
+                        notInBarDialog(view);
+                    }
                 } else {
                     ClosedDialog();
                 }
@@ -63,20 +90,21 @@ public class UpdateBarActivity extends AppCompatActivity {
 
     }
 
-    public void AttentionDialog(View view) {
+
+    public void AttentionDialogLine(View view) {
         new AlertDialog.Builder(this)
                 .setTitle("Attention!")
                 .setMessage("The information you are about to enter will update to all users. Please enter accurate numbers so we can all benefit!")
                 .setPositiveButton("Ok!", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        BuildDialog();
+                        BuildDialogLine();
                     }
                 })
                 .show();
     }
 
-    public void BuildDialog() {
+    public void BuildDialogLine() {
 
         final EditText input = new EditText(this);
 
@@ -88,13 +116,64 @@ public class UpdateBarActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Editable usrinput = input.getText();
-                        validUsrInput(usrinput);
+                        validUsrInputLine(usrinput);
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
+                    }
+                })
+                .show();
+    }
+
+    public void AttentionDialogBar(View view) {
+        new AlertDialog.Builder(this)
+                .setTitle("Attention!")
+                .setMessage("The information you are about to enter will update to all users. Please enter accurate numbers so we can all benefit!")
+                .setPositiveButton("Ok!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        BuildDialogBar();
+                    }
+                })
+                .show();
+    }
+
+    public void BuildDialogBar() {
+
+        final EditText input = new EditText(this);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Who's in the bar?")
+                .setMessage("Enter the number of people currently at " + name)
+                .setView(input)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Editable usrinput = input.getText();
+                        validUsrInputBar(usrinput);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .show();
+    }
+
+
+    public void notInBarDialog(View view) {
+        new AlertDialog.Builder(this)
+                .setTitle("You're not at " + name)
+                .setMessage("You can only update the information of the bar that you are at")
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
                     }
                 })
                 .show();
@@ -113,7 +192,7 @@ public class UpdateBarActivity extends AppCompatActivity {
                 .show();
     }
 
-    public void validUsrInput(Editable usrinput) {
+    public void validUsrInputLine(Editable usrinput) {
         String usr = usrinput.toString();
 
         try {
@@ -126,7 +205,7 @@ public class UpdateBarActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.cancel();
-                                BuildDialog();
+                                BuildDialogLine();
                             }
                         })
                         .show();
@@ -143,10 +222,49 @@ public class UpdateBarActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.cancel();
-                        BuildDialog();
+                        BuildDialogLine();
                     }
                 })
                 .show();
+        }
+
+        seeUpdate();
+
+    }
+
+    public void validUsrInputBar(Editable usrinput) {
+        String usr = usrinput.toString();
+
+        try {
+            int num = Integer.parseInt(usr);
+            if (num < 0 || num > 500) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Error!")
+                        .setMessage("Please input a numeric value between 0 and 500")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.cancel();
+                                BuildDialogBar();
+                            }
+                        })
+                        .show();
+            } else {
+                DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("locations");
+                myRef.child(gkey).child("tracked").setValue(usr);
+            }
+        } catch (NumberFormatException e) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Error!")
+                    .setMessage("Please input a numeric value between 0 and 500")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
+                            BuildDialogBar();
+                        }
+                    })
+                    .show();
         }
 
         seeUpdate();
@@ -163,8 +281,13 @@ public class UpdateBarActivity extends AppCompatActivity {
         inline.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String value = snapshot.getValue(String.class);
-                pplinline.setText(value);
+                if (barStatus == 1) {
+                    String value = snapshot.getValue(String.class);
+                    pplinline.setText(value);
+                } else {
+                    inline.setValue("Closed");
+                    pplinline.setText("Closed");
+                }
             }
 
             @Override
@@ -173,11 +296,16 @@ public class UpdateBarActivity extends AppCompatActivity {
             }
         });
 
-        locationDatabase.child(geofence).addListenerForSingleValueEvent(new ValueEventListener() {
+        locationDatabase.child(geofenceID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String value = snapshot.child("tracked").getValue(String.class);
-                pplinbar.setText(value);
+                if (barStatus == 1) {
+                    String value = snapshot.child("tracked").getValue(String.class);
+                    pplinbar.setText(value);
+                } else {
+                    locationDatabase.child(geofenceID).child("tracked").setValue("0");
+                    pplinbar.setText("0");
+                }
             }
 
             @Override
@@ -189,12 +317,6 @@ public class UpdateBarActivity extends AppCompatActivity {
 
     public void gotoMain(View view) {
         finish();
-    }
-
-    public void setName(String a, String t, String g) {
-        name = a;
-        tag = t;
-        geofence = g;
     }
 
 }

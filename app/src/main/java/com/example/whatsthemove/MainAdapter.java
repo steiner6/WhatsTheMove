@@ -48,29 +48,30 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         holder.myImageView.setTag(mainAdaptTags.get(position));
         holder.inlineTextView.setText(mainAdaptBarNames.get(position));
         holder.inlineTextView.setTag(barStatus.get(position));
-        holder.peepsinbarlabel.setTag(fences.get(position));
+        holder.pplinbarlabelTextView.setTag(fences.get(position));
 
-        String inline = (String) holder.myImageView.getTag();
-        String gfencename = (String) holder.peepsinbarlabel.getTag();
-        int status = Integer.parseInt(holder.inlineTextView.getTag().toString());
+        final String barnames = (String) holder.myImageView.getTag();
+        final String gfencename = (String) holder.pplinbarlabelTextView.getTag();
+        final int status = Integer.parseInt(holder.inlineTextView.getTag().toString());
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        final DatabaseReference line = database.getReference(inline);
-        final DatabaseReference bar = database.getReference("locations");
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final DatabaseReference barname = database.getReference(barnames);
+        final DatabaseReference locations = database.getReference("locations");
 
         //Update data if bar is open
         if (status == 1) {
             //Get number of people in line
-            line.addValueEventListener(new ValueEventListener() {
+            barname.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     String value = snapshot.getValue(String.class);
-                    try {
-                        Integer val = Integer.parseInt(value);
-                        holder.ppl.setText(value);
-                    } catch (NumberFormatException e) {
-                        line.setValue("0");
-                        holder.ppl.setText("0");
+                    if (value.equals("Closed")) {
+                        barname.setValue("0");
+                        locations.child(gfencename).child("tracked").setValue("0");
+                        holder.pplinlineadaptTextView.setText("0");
+
+                    } else {
+                        holder.pplinlineadaptTextView.setText(value);
                     }
                 }
 
@@ -81,10 +82,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
             });
 
             //Get number of people in bar
-            bar.child("tracked").addValueEventListener(new ValueEventListener() {
+            locations.child(gfencename).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    String value = snapshot.getValue(String.class);
+                    String value = snapshot.child("tracked").getValue(String.class);
                     holder.inbarTextView.setText(value);
                 }
 
@@ -96,31 +97,11 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
 
         //Set bar to closed and people in bar to 0 if bar is closed
         } else {
-            line.setValue("Closed");
-            line.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    String value = snapshot.getValue(String.class);
-                    holder.ppl.setText(value);
-                }
+            barname.setValue("Closed");
+            holder.pplinlineadaptTextView.setText("Closed");
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    error.toException();
-                }
-            });
-
-            /*bar.child(gfencename).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    String value = snapshot.getValue(String.class);
-                    holder.inbarTextView.setText(value);
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    error.toException();
-                }
-            });*/
+            locations.child(gfencename).child("tracked").setValue("0");
+            holder.inbarTextView.setText("0");
         }
     }
 
@@ -132,24 +113,24 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView inlineTextView;
         TextView inbarTextView;
-        TextView ppl;
+        TextView pplinlineadaptTextView;
         ImageView myImageView;
-        TextView peepsinbarlabel;
+        TextView pplinbarlabelTextView;
 
         ViewHolder(View itemView) {
             super(itemView);
             inlineTextView = itemView.findViewById(R.id.barname);
             myImageView = itemView.findViewById(R.id.barpic);
-            ppl = itemView.findViewById(R.id.pplinlineadapt);
+            pplinlineadaptTextView = itemView.findViewById(R.id.pplinlineadapt);
             inbarTextView = itemView.findViewById(R.id.pplinbaradapt);
-            peepsinbarlabel = itemView.findViewById(R.id.pplinbaradaptlabel);
+            pplinbarlabelTextView = itemView.findViewById(R.id.pplinbaradaptlabel);
 
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            listener.gotoUpdate(inlineTextView, myImageView, peepsinbarlabel);
+            listener.gotoUpdate(inlineTextView, myImageView, pplinbarlabelTextView);
         }
     }
 

@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,21 +16,27 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TooManyListenersException;
 
 public class MainActivity extends AppCompatActivity implements MainAdapter.AdapterInterface {
 
@@ -40,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     private Context context = MainActivity.this;
     private MainAdapter.AdapterInterface listener = MainActivity.this;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
     private List<String> barNames = new ArrayList<>();
     private List<Integer> barPics = new ArrayList<>();
@@ -50,7 +57,76 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private List<Double> lat = new ArrayList<>();
     private List<Double> lng = new ArrayList<>();
 
+    final DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("locations");
+    final GeoFire geofire = new GeoFire(ref);
+    private GeoQuery query = null;
 
+    final private double RADIUS = 0.025;
+    private String gkey;
+    private boolean presentFlag = false;
+
+    GeoQueryEventListener geoQueryEventListener = new GeoQueryEventListener() {
+
+        @Override
+        public void onKeyEntered(final String key, GeoLocation location) {
+            gkey = key;
+            presentFlag = true;
+            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.child("tracked").getValue(String.class);
+                    Integer val = Integer.parseInt(value);
+                    val = val + 1;
+                    String sval = String.valueOf(val);
+                    ref.child(key).child("tracked").setValue(sval);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+
+        }
+
+        @Override
+        public void onKeyExited(final String key) {
+            presentFlag = false;
+            ref.child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String value = snapshot.child("tracked").getValue(String.class);
+                    Integer val = Integer.parseInt(value);
+                    val = val - 1;
+                    if (val < 0) {
+                        val = 0;
+                    }
+                    String sval = String.valueOf(val);
+                    ref.child(key).child("tracked").setValue(sval);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    error.toException();
+                }
+            });
+        }
+
+        @Override
+        public void onKeyMoved(String key, GeoLocation location) {
+
+        }
+
+        @Override
+        public void onGeoQueryReady() {
+
+        }
+
+        @Override
+        public void onGeoQueryError(DatabaseError error) {
+            error.toException();
+        }
+    };
 
 
     @SuppressLint("MissingPermission")
@@ -64,23 +140,22 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                     "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
         }*/
 
-        /*locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationListen();
-        startListening();
-        if (!checkPermissions()) {
-            requestPermissions();
-        }*/
-
         addToArrays();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
-        if (!isMyServiceRunning(GeoLocationService.class)) {
-            Intent intent = new Intent(this, GeoLocationService.class);
-            startService(intent);
-        }
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationListen();
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+        startListening();
+
+        getLocation();
+
 
         /*int i = 0;
         for (String fence : fences) {
@@ -88,8 +163,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
             i++;
         }*/
 
-        SharedPreferences prefs = getSharedPreferences("usrpref", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
+        //SharedPreferences prefs = getSharedPreferences("usrpref", Context.MODE_PRIVATE);
+        //SharedPreferences.Editor editor = prefs.edit();
 
         mainManager = new LinearLayoutManager(this);
         mainRecyclerView = findViewById(R.id.mainRecyclerView);
@@ -124,21 +199,57 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (!isMyServiceRunning(GeoLocationService.class)) {
-                Intent intent = new Intent(this, GeoLocationService.class);
-                startService(intent);
-            }
+            startListening();
         }
     }
 
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
+    @SuppressLint("MissingPermission")
+    private void getLocation() {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location != null) {
+            updateLocationInfo(location);
         }
-        return false;
+    }
+
+    private void startListening() {
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+    }
+
+    private void updateLocationInfo(Location location) {
+        Log.i("Location info", location.toString());
+
+        GeoLocation geoLocation = new GeoLocation(location.getLatitude(), location.getLongitude());
+        if (query == null) {
+            query = geofire.queryAtLocation(geoLocation, RADIUS);
+            query.addGeoQueryEventListener(geoQueryEventListener);
+        } else {
+            query.setCenter(geoLocation);
+        }
+    }
+
+    private void locationListen() {
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                updateLocationInfo(location);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        };
     }
 
     //@SuppressWarnings("MissingPermission")
@@ -195,6 +306,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         intent.putExtra("tag", tag);
         intent.putExtra("stat", s);
         intent.putExtra("geofence", g);
+        intent.putExtra("gkey", gkey);
+        intent.putExtra("presentFlag", presentFlag);
 
         //Go to update bar activity
         startActivity(intent);
@@ -504,16 +617,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 break;
         }
         return stats;
-    }
-
-    @Override
-    protected void onDestroy() {
-        //stopService(mServiceIntent);
-        Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction("restartservice");
-        broadcastIntent.setClass(this, Restarter.class);
-        this.sendBroadcast(broadcastIntent);
-        super.onDestroy();
     }
 
 }
