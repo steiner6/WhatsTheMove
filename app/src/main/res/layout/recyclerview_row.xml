@@ -36,7 +36,7 @@
         android:layout_marginLeft="91dp"
         android:layout_marginTop="4dp"
         android:layout_weight="1"
-        app:srcCompat="@drawable/kklub" />
+        app:srcCompat="@drawable/kollegeklub" />
 
     <CheckBox
         android:id="@+id/checkBox"

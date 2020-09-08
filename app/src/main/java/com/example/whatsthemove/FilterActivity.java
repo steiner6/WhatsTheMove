@@ -30,8 +30,7 @@ public class FilterActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("whatsthemove", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-
-        addToArrays();
+        
         filterManager = new LinearLayoutManager(this);
         filterRecyclerView = findViewById(R.id.filterRecycleView);
         filterRecyclerView.setLayoutManager(filterManager);
@@ -45,27 +44,6 @@ public class FilterActivity extends AppCompatActivity {
 
     public void gotoMain(View view) {
         finish();
-    }
-
-    public void addToArrays() {
-
-        filterBarNames.add("Chasers Bar & Grille");
-        filterBarPics.add(R.drawable.chasers);
-
-        filterBarNames.add("The Double U");
-        filterBarPics.add(R.drawable.doubleu);
-
-        filterBarNames.add("The Kollege Klub");
-        filterBarPics.add(R.drawable.kklub);
-
-        filterBarNames.add("Mondays");
-        filterBarPics.add(R.drawable.mondays);
-
-        filterBarNames.add("Whisky Jacks Saloon");
-        filterBarPics.add(R.drawable.whiskyjacks);
-
-        filterBarNames.add("The Karaoke Kid");
-        filterBarPics.add(R.drawable.kkid);
     }
 
 }

@@ -11,7 +11,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -293,16 +292,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
         //Get selected bar-to-update picture
         String tag = (String) myImageView.getTag();
-        Resources resource = context.getResources();
-        int resourceID = resource.getIdentifier(tag, "drawable", context.getPackageName());
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), resourceID);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] b = baos.toByteArray();
 
         //Add name and picture to intent
         intent.putExtra("name", a);
-        intent.putExtra("picture", b);
         intent.putExtra("tag", tag);
         intent.putExtra("stat", s);
         intent.putExtra("geofence", g);
@@ -319,13 +311,11 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     }
 
     public void addToArrays() {
-        int status;
 
         barNames.add("Chasers Bar & Grille");
         barPics.add(R.drawable.chasers);
         tags.add("chasers");
-        status = checkChasers();
-        barStatus.add(status);
+        barStatus.add(checkChasers());
         fences.add("chasersGeofence");
         lat.add(43.074200);
         lng.add(-89.392090);
@@ -333,42 +323,202 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         barNames.add("The Double U");
         barPics.add(R.drawable.doubleu);
         tags.add("doubleu");
-        status = checkUU();
-        barStatus.add(status);
+        barStatus.add(checkUU());
         fences.add("doubleuGeofence");
         lat.add(43.073574);
         lng.add(-89.396809);
 
         barNames.add("The Kollege Klub");
-        barPics.add(R.drawable.kklub);
-        tags.add("kklub");
-        status = checkKKlub();
-        barStatus.add(status);
-        fences.add("kklubGeofence");
+        barPics.add(R.drawable.kollegeklub);
+        tags.add("kollegeklub");
+        barStatus.add(checkKKlub());
+        fences.add("kollegeklubGeofence");
         lat.add(43.075647);
         lng.add(-89.397010);
 
         barNames.add("Mondays");
         barPics.add(R.drawable.mondays);
         tags.add("mondays");
-        status = checkMondays();
-        barStatus.add(status);
+        barStatus.add(checkMondays());
         fences.add("mondaysGeofence");
         lat.add(43.074634);
         lng.add(-89.394614);
 
         barNames.add("Whiskey Jacks Saloon");
-        barPics.add(R.drawable.whiskyjacks);
-        tags.add("whiskyjacks");
-        status = checkWhiskeys();
-        barStatus.add(status);
+        barPics.add(R.drawable.whiskeyjackssaloon);
+        tags.add("whiskeyjackssaloon");
+        barStatus.add(checkWhiskeys());
         fences.add("whiskeysGeofence");
         lat.add(43.075149);
         lng.add(-89.394798);
 
-        //barNames.add("The Karaoke Kid");
-        //barPics.add(R.drawable.kkid);
-        //tags.add("kkid");
+        barNames.add("Blue Velvet Lounge");
+        barPics.add(R.drawable.bluevelvetlounge);
+        tags.add("bluevelvetlounge");
+        barStatus.add(checkBlueVelvet());
+        fences.add("bluevelvetloungeGeofence");
+        lat.add(43.074341);
+        lng.add(-89.394557);
+
+        barNames.add("The Churchkey");
+        barPics.add(R.drawable.churchkey);
+        tags.add("churchkey");
+        barStatus.add(checkChurchkey());
+        fences.add("churchkeyGeofence");
+        lat.add(43.073425);
+        lng.add(-89.397021);
+
+        barNames.add("City Bar");
+        barPics.add(R.drawable.citybar);
+        tags.add("citybar");
+        barStatus.add(checkCityBar());
+        fences.add("citybarGeofence");
+        lat.add(43.075146);
+        lng.add(-89.396165);
+
+        barNames.add("Danny's Pub");
+        barPics.add(R.drawable.dannyspub);
+        tags.add("dannyspub");
+        barStatus.add(checkDannysPub());
+        fences.add("dannyspubGeofence");
+        lat.add(43.074424);
+        lng.add(-89.392631);
+
+        barNames.add("Jordan's Big 10 Pub");
+        barPics.add(R.drawable.jordansbigtenpub);
+        tags.add("jordansbigtenpub");
+        barStatus.add(checkJordansBigTenPub());
+        fences.add("jordansbigtenpubGeofence");
+        lat.add(43.068083);
+        lng.add(-89.408326);
+
+        barNames.add("Lucky's 1313 Pub");
+        barPics.add(R.drawable.luckys);
+        tags.add("luckys");
+        barStatus.add(checkLuckysPub());
+        fences.add("luckysGeofence");
+        lat.add(43.067563);
+        lng.add(-89.408165);
+
+        barNames.add("The Nitty Gritty");
+        barPics.add(R.drawable.nittygritty);
+        tags.add("nittygritty");
+        barStatus.add(checkNittyGritty());
+        fences.add("nittygrittyGeofence");
+        lat.add(43.071812);
+        lng.add(-89.395594);
+
+        barNames.add("Plaza Tavern");
+        barPics.add(R.drawable.plazatavern);
+        tags.add("plazatavern");
+        barStatus.add(checkPlazaTavern());
+        fences.add("plazataverGeofence");
+        lat.add(43.075341);
+        lng.add(-89.390396);
+
+        barNames.add("Red Rock Saloon");
+        barPics.add(R.drawable.redrocksaloon);
+        tags.add("redrocksaloon");
+        barStatus.add(checkRedRockSaloon());
+        fences.add("redrocksaloonGeofence");
+        lat.add(43.074156);
+        lng.add(-89.391287);
+
+        barNames.add("The Red Shed");
+        barPics.add(R.drawable.redshed);
+        tags.add("redshed");
+        barStatus.add(checkRedShed());
+        fences.add("redshedGeofence");
+        lat.add(43.073559);
+        lng.add(-89.396071);
+
+        barNames.add("Sconnie Bar");
+        barPics.add(R.drawable.sconniebar);
+        tags.add("sconniebar");
+        barStatus.add(checkSconnieBar());
+        fences.add("sconniebarGeofence");
+        lat.add(43.067611);
+        lng.add(-89.410247);
+
+        barNames.add("State Street Brats");
+        barPics.add(R.drawable.statestreetbrats);
+        tags.add("statestreetbrats");
+        barStatus.add(checkStateStreetBrats());
+        fences.add("statestreetbratsGeofence");
+        lat.add(43.074692);
+        lng.add(-89.395929);
+
+        barNames.add("Wando's");
+        barPics.add(R.drawable.wandos);
+        tags.add("wandos");
+        barStatus.add(checkWandos());
+        fences.add("wandosGeofence");
+        lat.add(43.073413);
+        lng.add(-89.396012);
+
+        barNames.add("The Karaoke Kid");
+        barPics.add(R.drawable.kkid);
+        tags.add("kkid");
+        barStatus.add(checkKaraokeKid());
+        fences.add("kkidGeofence");
+        lat.add(43.073385);
+        lng.add(-89.396374);
+    }
+
+    private int checkKaraokeKid() {
+        return 1;
+    }
+
+    private int checkWandos() {
+        return 1;
+    }
+
+    private int checkStateStreetBrats() {
+        return 1;
+    }
+
+    private int checkSconnieBar() {
+        return 1;
+    }
+
+    private int checkRedShed() {
+        return 1;
+    }
+
+    private int checkRedRockSaloon() {
+        return 1;
+    }
+
+    private int checkPlazaTavern() {
+        return 1;
+    }
+
+    private int checkNittyGritty() {
+        return 1;
+    }
+
+    private int checkLuckysPub() {
+        return 1;
+    }
+
+    private int checkJordansBigTenPub() {
+        return 1;
+    }
+
+    private int checkDannysPub() {
+        return 1;
+    }
+
+    private int checkCityBar() {
+        return 1;
+    }
+
+    private int checkChurchkey() {
+        return 1;
+    }
+
+    private int checkBlueVelvet() {
+        return 1;
     }
 
     private int checkWhiskeys() {

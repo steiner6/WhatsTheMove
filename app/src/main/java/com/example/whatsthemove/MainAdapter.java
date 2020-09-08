@@ -34,7 +34,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>  {
         this.listener = listener;
         this.barStatus = stat;
         this.fences = fences;
-
     }
 
     public MainAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

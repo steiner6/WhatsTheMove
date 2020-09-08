@@ -9,18 +9,24 @@
 
     <TextView
         android:id="@+id/barname"
-        android:layout_width="192dp"
+        android:layout_width="206dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginStart="17dp"
-        android:layout_marginLeft="17dp"
-        android:layout_marginTop="3dp"
-        android:layout_marginEnd="44dp"
-        android:layout_marginRight="44dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginLeft="13dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="83dp"
+        android:layout_marginRight="83dp"
+        android:layout_toEndOf="@+id/barpic"
+        android:layout_toRightOf="@+id/barpic"
+        android:fontFamily="sans-serif-smallcaps"
         android:tag="1"
-        android:text="TextView" />
+        android:text="TextView"
+        android:textColor="@color/gray"
+        android:textSize="20dp"
+        android:textStyle="italic" />
 
     <ImageView
         android:id="@+id/barpic"
@@ -29,9 +35,9 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginStart="9dp"
+        android:layout_marginLeft="9dp"
+        android:layout_marginTop="15dp"
         android:layout_weight="1"
         android:tag="chasers"
         app:srcCompat="@drawable/chasers" />
@@ -43,7 +49,7 @@
         android:layout_below="@+id/barname"
         android:layout_marginStart="15dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="11dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:text="People in line:" />
@@ -72,9 +78,9 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:layout_marginTop="15dp"
-        android:layout_marginEnd="65dp"
-        android:layout_marginRight="65dp"
-        android:layout_marginBottom="23dp"
+        android:layout_marginEnd="67dp"
+        android:layout_marginRight="67dp"
+        android:layout_marginBottom="15dp"
         android:text="Unknown" />
 
     <TextView
@@ -84,8 +90,8 @@
         android:layout_below="@+id/barname"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="21dp"
-        android:layout_marginEnd="65dp"
+        android:layout_marginTop="11dp"
+        android:layout_marginEnd="67dp"
         android:layout_marginRight="65dp"
         android:text="Unknown" />
 

@@ -1,10 +1,12 @@
 package com.example.whatsthemove;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Application;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
@@ -30,7 +32,9 @@ public class UpdateBarActivity extends AppCompatActivity {
     Boolean presentFlag;
     Button updatelineButton;
     Button updatebarButton;
+    Context context = UpdateBarActivity.this;
 
+    @SuppressLint("ResourceType")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,12 +53,12 @@ public class UpdateBarActivity extends AppCompatActivity {
         presentFlag = bundle.getBoolean("presentFlag");
         barStatus = bundle.getInt("stat");
 
-        byte[] b = bundle.getByteArray("picture");
-        Bitmap bmp = BitmapFactory.decodeByteArray(b, 0, b.length);
         TextView title = findViewById(R.id.title);
         ImageView bitimage = findViewById(R.id.bitimage);
         title.setText(name);
-        bitimage.setImageBitmap(bmp);
+        Resources resources = context.getResources();
+        int resourceID = resources.getIdentifier(tag, "drawable", context.getPackageName());
+        bitimage.setImageResource(resourceID);
 
         seeUpdate();
 
