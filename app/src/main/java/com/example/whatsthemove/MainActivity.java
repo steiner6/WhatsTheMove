@@ -1,6 +1,7 @@
 package com.example.whatsthemove;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -10,19 +11,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -32,7 +34,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     private MainAdapter.AdapterInterface listener = MainActivity.this;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     private List<String> barNames = new ArrayList<>();
     private List<Integer> barPics = new ArrayList<>();
@@ -134,27 +136,18 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*if (!haveNetwork()) {
+        if (!haveNetwork()) {
             Toast.makeText(MainActivity.this, "You are not connected to the internet. " +
-                    "Please establish a network connection to get accurate line info", Toast.LENGTH_SHORT).show();
-        }*/
+                    "Please establish a network connection and restart the app to get accurate line info", Toast.LENGTH_LONG).show();
+        }
 
         addToArrays();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        if (checkLocationPermission()) {
+            startListening();
+            locationListen();
+            getLocation();
         }
-
-
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationListen();
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-
-        startListening();
-
-        getLocation();
-
 
         /*int i = 0;
         for (String fence : fences) {
@@ -177,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     }
 
-    /*private boolean haveNetwork() {
+    private boolean haveNetwork() {
         boolean have_WIFI= false;
         boolean have_MobileData = false;
         ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
@@ -187,18 +180,46 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
             if (info.getTypeName().equalsIgnoreCase("MOBILE DATA"))if (info.isConnected())have_MobileData=true;
         }
         return have_WIFI||have_MobileData;
-    }*/
+    }
 
+    public boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Why we use your location")
+                        .setMessage("This app uses your location to tell when you enter and exit a bar and provide how many people are in a bar based on this data. " +
+                                "Your identity is not recorded. While you can still use this app if you deny location permission, data provided will be less accurate for all users.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startListening();
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        startListening();
+                    }
+                } else {
+                }
+                return;
+            }
         }
     }
 
@@ -261,11 +282,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         DatabaseReference childref = FirebaseDatabase.getInstance().getReference("locations/" + fence);
         //createTrackedChildren(childref);
         //removeTrackedChildren(childref);
-
-        /*if (!checkPermissions()) {
-            showSnackbar(getString(R.string.insufficient_permissions));
-            return;
-        }*/
 
     }
 
@@ -466,59 +482,549 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
     }
 
     private int checkKaraokeKid() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkWandos() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.TUESDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time < 11 || time >= 22) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkStateStreetBrats() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkSconnieBar() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.MONDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.TUESDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkRedShed() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkRedRockSaloon() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkPlazaTavern() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkNittyGritty() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkLuckysPub() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        //Hours
+        //Sunday - Thursday: 11am - 2am
+        //Friday - Saturday: 11am - 2:30am
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.MONDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.TUESDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkJordansBigTenPub() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        //Hours
+        //Sunday - Saturday: 11am - 2:30am
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.MONDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.TUESDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time >= 2.5 && time < 11) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkDannysPub() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkCityBar() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        //Hours
+        //Monday - Friday: 3pm - 1am
+        //Saturday - Sunday: 12pm - 1am
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                if (time >= 1 && time < 12) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.MONDAY:
+                if (time >= 1 && time < 15) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.TUESDAY:
+                if (time >= 1 && time < 15) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time >= 1 && time < 15) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time >= 1 && time < 15) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time >= 1 && time < 15) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time >= 1 && time < 12) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkChurchkey() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        //Hours
+        //Tuesday: 7pm - 2am
+        //Wednesday - Thursday: 11am - 2am
+        //Friday: 11am - 2:30am
+        //Saturday: 7pm - 2:30am
+
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                if (time >= 2.5) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                if (time < 19) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.WEDNESDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.THURSDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.FRIDAY:
+                if (time >= 2 && time < 11) {
+                    stats = 0;
+                }
+                break;
+            case Calendar.SATURDAY:
+                if (time >= 2.5 && time < 19) {
+                    stats = 0;
+                }
+                break;
+        }
+        return stats;
     }
 
     private int checkBlueVelvet() {
-        return 1;
+        Calendar calendar = Calendar.getInstance();
+        int time = calendar.get(Calendar.HOUR_OF_DAY);
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int stats = 1;
+
+        switch (day) {
+            case Calendar.SUNDAY:
+                stats = 0;
+                break;
+            case Calendar.MONDAY:
+                stats = 0;
+                break;
+            case Calendar.TUESDAY:
+                stats = 0;
+                break;
+            case Calendar.WEDNESDAY:
+                stats = 0;
+                break;
+            case Calendar.THURSDAY:
+                stats = 0;
+                break;
+            case Calendar.FRIDAY:
+                stats = 0;
+                break;
+            case Calendar.SATURDAY:
+                stats = 0;
+                break;
+        }
+        return stats;
     }
 
     private int checkWhiskeys() {
@@ -531,37 +1037,37 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Sunday - Saturday: 11am - 2am
         switch (day) {
             case Calendar.SUNDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.MONDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.TUESDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.WEDNESDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.THURSDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.FRIDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
             case Calendar.SATURDAY:
-                if (time > 2 && time < 11 ) {
+                if (time >= 2 && time < 11 ) {
                     stats = 0;
                 }
                 break;
@@ -581,7 +1087,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Friday - Saturday = 4pm - 2am
         switch (day) {
             case Calendar.SUNDAY:
-                if (time > 2) {
+                if (time >= 2) {
                     stats = 0;
                 }
                 break;
@@ -591,27 +1097,27 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.TUESDAY:
-                if (time > 2 && time < 19) {
+                if (time >= 2 && time < 19) {
                     stats = 0;
                 }
                 break;
             case Calendar.WEDNESDAY:
-                if (time > 2 && time < 19) {
+                if (time >= 2 && time < 19) {
                     stats = 0;
                 }
                 break;
             case Calendar.THURSDAY:
-                if (time > 2 && time < 19) {
+                if (time >= 2 && time < 19) {
                     stats = 0;
                 }
                 break;
             case Calendar.FRIDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
             case Calendar.SATURDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
@@ -623,14 +1129,14 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         Calendar calendar = Calendar.getInstance();
         int time = calendar.get(Calendar.HOUR_OF_DAY);
         int day = calendar.get(Calendar.DAY_OF_WEEK);
-        int stats = 1;
+        int stats = 0;
 
         //Hours
         //Sunday = 8pm - 2am
         //Monday = Closed
         //Tuesday - Friday = 2pm - 2am
         //Saturday = 11am - 2am
-        switch (day) {
+        /*switch (day) {
             case Calendar.SUNDAY:
                 if (time > 2 && time < 20) {
                     stats = 0;
@@ -666,7 +1172,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                     stats = 0;
                 }
                 break;
-        }
+        }*/
         return stats;
     }
 
@@ -682,7 +1188,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Tuesday - Saturday = 4pm - 2am
         switch (day) {
             case Calendar.SUNDAY:
-                if (time > 2) {
+                if (time >= 2) {
                     stats = 0;
                 }
                 break;
@@ -695,22 +1201,22 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.WEDNESDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
             case Calendar.THURSDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
             case Calendar.FRIDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
             case Calendar.SATURDAY:
-                if (time > 2 && time < 16) {
+                if (time >= 2 && time < 16) {
                     stats = 0;
                 }
                 break;
@@ -731,12 +1237,12 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         //Saturday = Noon - 2am
         switch (day) {
             case Calendar.SUNDAY:
-                if (time > 2 && time < 12) {
+                if (time >= 2 && time < 12) {
                     stats = 0;
                 }
                 break;
             case Calendar.MONDAY:
-                if (time > 2) {
+                if (time >= 2) {
                     stats = 0;
                 }
                 break;
@@ -746,22 +1252,22 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
                 }
                 break;
             case Calendar.WEDNESDAY:
-                if (time > 2 && time < 18) {
+                if (time >= 2 && time < 18) {
                     stats = 0;
                 }
                 break;
             case Calendar.THURSDAY:
-                if (time > 2 && time < 18) {
+                if (time >= 2 && time < 18) {
                     stats = 0;
                 }
                 break;
             case Calendar.FRIDAY:
-                if (time > 2 && time < 18) {
+                if (time >= 2 && time < 18) {
                     stats = 0;
                 }
                 break;
             case Calendar.SATURDAY:
-                if (time > 2 && time < 12) {
+                if (time >= 2 && time < 12) {
                     stats = 0;
                 }
                 break;

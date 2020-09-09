@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -30,19 +29,20 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="16dp"
         android:text="What's The Move"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.321"
+        app:layout_constraintHorizontal_bias="0.273"
         app:layout_constraintStart_toEndOf="@+id/backArrow"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/bitimage"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
-        android:layout_marginTop="40dp"
+        android:layout_width="193dp"
+        android:layout_height="199dp"
+        android:layout_marginTop="28dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.463"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title"
         app:srcCompat="@drawable/chasers" />
@@ -53,8 +53,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="TextView"
+        android:textSize="30dp"
         android:textStyle="italic"
-        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.473"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,13 +71,14 @@
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:text="People in line:"
+        android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bitimage" />
 
     <TextView
         android:id="@+id/pplinbarlabel"
         android:layout_width="wrap_content"
-        android:layout_height="23dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/pplinlinelabel"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="48dp"
@@ -86,6 +87,7 @@
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:text="People in the bar:"
+        android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pplinlinelabel" />
 
@@ -96,20 +98,19 @@
         android:layout_below="@+id/barname"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginStart="88dp"
-        android:layout_marginLeft="88dp"
         android:layout_marginTop="52dp"
+        android:layout_marginEnd="76dp"
+        android:layout_marginRight="76dp"
         android:text="Unknown"
+        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.076"
-        app:layout_constraintStart_toEndOf="@+id/pplinlinelabel"
         app:layout_constraintTop_toBottomOf="@+id/bitimage" />
 
     <Button
         android:id="@+id/editlinebutton"
         android:layout_width="277dp"
         android:layout_height="61dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="68dp"
         android:text="Update number of People in line"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -119,22 +120,23 @@
         android:id="@+id/peepinbar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="76dp"
+        android:layout_marginRight="76dp"
         android:text="Unknown"
+        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.387"
-        app:layout_constraintStart_toEndOf="@+id/pplinbarlabel"
         app:layout_constraintTop_toBottomOf="@+id/pplinline" />
 
     <TextView
         android:id="@+id/accurate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:text="Are these numbers accurate?"
         app:layout_constraintBottom_toTopOf="@+id/editlinebutton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.484"
+        app:layout_constraintHorizontal_bias="0.483"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button

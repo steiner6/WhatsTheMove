@@ -3,13 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="115dp"
-    android:orientation="horizontal">
-
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingBottom="12dp">
 
     <TextView
         android:id="@+id/barname"
-        android:layout_width="206dp"
+        android:layout_width="253dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
@@ -17,8 +17,8 @@
         android:layout_marginStart="13dp"
         android:layout_marginLeft="13dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="83dp"
-        android:layout_marginRight="83dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginRight="18dp"
         android:layout_toEndOf="@+id/barpic"
         android:layout_toRightOf="@+id/barpic"
         android:fontFamily="sans-serif-smallcaps"
@@ -59,13 +59,15 @@
         android:layout_width="wrap_content"
         android:layout_height="23dp"
         android:layout_below="@+id/pplinlinelabel"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="15dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"
-        android:layout_toEndOf="@+id/barpic"
-        android:layout_toRightOf="@+id/barpic"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="124dp"
+        android:layout_marginLeft="124dp"
+        android:layout_marginTop="13dp"
+        android:layout_marginEnd="29dp"
+        android:layout_marginRight="29dp"
+        android:layout_toStartOf="@+id/pplinlineadapt"
+        android:layout_toLeftOf="@+id/pplinlineadapt"
         android:tag="Geofence"
         android:text="People in the bar:" />
 
@@ -73,14 +75,12 @@
         android:id="@+id/pplinbaradapt"
         android:layout_width="wrap_content"
         android:layout_height="18dp"
-        android:layout_below="@+id/pplinline"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="67dp"
-        android:layout_marginRight="67dp"
-        android:layout_marginBottom="15dp"
+        android:layout_marginTop="76dp"
+        android:layout_marginEnd="71dp"
+        android:layout_marginRight="71dp"
         android:text="Unknown" />
 
     <TextView
@@ -91,8 +91,8 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_marginTop="11dp"
-        android:layout_marginEnd="67dp"
-        android:layout_marginRight="65dp"
+        android:layout_marginEnd="71dp"
+        android:layout_marginRight="71dp"
         android:text="Unknown" />
 
 </RelativeLayout>
