@@ -17,14 +17,11 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -136,11 +133,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (!haveNetwork()) {
-            Toast.makeText(MainActivity.this, "You are not connected to the internet. " +
-                    "Please establish a network connection and restart the app to get accurate line info", Toast.LENGTH_LONG).show();
-        }
-
         addToArrays();
 
         if (checkLocationPermission()) {
@@ -170,17 +162,6 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.Adapt
 
     }
 
-    private boolean haveNetwork() {
-        boolean have_WIFI= false;
-        boolean have_MobileData = false;
-        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo[] networkInfos = connectivityManager.getAllNetworkInfo();
-        for(NetworkInfo info:networkInfos){
-            if (info.getTypeName().equalsIgnoreCase("WIFI"))if (info.isConnected())have_WIFI=true;
-            if (info.getTypeName().equalsIgnoreCase("MOBILE DATA"))if (info.isConnected())have_MobileData=true;
-        }
-        return have_WIFI||have_MobileData;
-    }
 
     public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
